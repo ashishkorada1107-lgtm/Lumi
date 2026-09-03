@@ -5,9 +5,10 @@ import webpush from "web-push";
  * This prevents module-level initialization errors which crash the root page if VAPID keys are malformed.
  */
 export function configureWebPush(): { success: true } | { success: false, error: string } {
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT;
+  const getEnv = (k: string) => process.env[k];
+  const publicKey = getEnv('NEXT_PUBLIC_VAPID_PUBLIC_KEY');
+  const privateKey = getEnv('VAPID_PRIVATE_KEY');
+  const subject = getEnv('VAPID_SUBJECT') || 'mailto:admin@example.com';
 
   if (!publicKey || !privateKey || !subject) {
     return { 

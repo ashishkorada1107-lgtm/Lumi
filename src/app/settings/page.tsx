@@ -12,6 +12,8 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', user.id).maybeSingle();
 
-  return <SettingsClient userEmail={user.email || ''} initialName={profile?.display_name || ''} vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''} />;
+  const getEnv = (k: string) => process.env[k];
+  const vapidPublicKey = getEnv('NEXT_PUBLIC_VAPID_PUBLIC_KEY') || '';
+  return <SettingsClient userEmail={user.email || ''} initialName={profile?.display_name || ''} vapidPublicKey={vapidPublicKey} />;
 }
 
