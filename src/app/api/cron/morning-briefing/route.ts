@@ -13,13 +13,19 @@ export async function GET(request: Request) {
   try {
     // 1. Authenticate cron
     const authHeader = request.headers.get('authorization');
-    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
+    const cronSecret = process.env.CRON_SECRET;
     
     // Allow manual testing without auth header if we are in development
     const isLocalDev = process.env.NODE_ENV === 'development';
     
-    if (!isLocalDev && authHeader !== expectedAuth) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isLocalDev) {
+      if (!cronSecret) {
+        console.error('CRON_SECRET is missing from environment variables.');
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      }
+      if (authHeader !== `Bearer ${cronSecret}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     const config = configureWebPush();

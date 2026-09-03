@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Database } from "@/types/database.types";
 import { Clock, BookOpen, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Calendar, Circle } from "lucide-react";
 import { toggleTaskCompletion } from "@/app/actions";
+import { generateTimeline } from '@/lib/timeline';
+import DailyTimeline from '@/components/DailyTimeline';
 
 type ClassEvent = Database["public"]["Tables"]["classes"]["Row"];
 type ActivityEvent = Database["public"]["Tables"]["activities"]["Row"];
@@ -74,78 +76,7 @@ export default function TodayClient({
   const topPriorityTask = priorityCandidates[0];
 
   // Process Schedule & Free Periods
-  const scheduledItems = [
-    ...classes.map(c => ({ id: `cls-${c.id}`, title: c.title, start_time: c.start_time, end_time: c.end_time, location: c.room, type: 'class' as const, original: c })),
-    ...activities.map(a => ({ id: `act-${a.id}`, title: a.title, start_time: a.start_time, end_time: a.end_time, location: a.location, type: 'activity' as const, original: a }))
-  ].sort((a, b) => a.start_time < b.start_time ? -1 : 1);
-
-  // Calculate free periods between items
-  const freePeriods: { start: string, end: string, duration: number }[] = [];
-  
-  if (scheduledItems.length > 0) {
-    const mergedItems = [{ start: scheduledItems[0].start_time, end: scheduledItems[0].end_time }];
-    for (let i = 1; i < scheduledItems.length; i++) {
-      const item = scheduledItems[i];
-      const last = mergedItems[mergedItems.length - 1];
-      if (item.start_time <= last.end) {
-        if (item.end_time > last.end) last.end = item.end_time;
-      } else {
-        mergedItems.push({ start: item.start_time, end: item.end_time });
-      }
-    }
-
-    for (let i = 0; i < mergedItems.length - 1; i++) {
-      const current = mergedItems[i];
-      const next = mergedItems[i+1];
-      if (current.end < next.start) {
-        freePeriods.push({
-          start: current.end,
-          end: next.start,
-          duration: timeToMinutes(next.start) - timeToMinutes(current.end)
-        });
-      }
-    }
-  }
-
-  // Task Recommendations for free periods
-  let availableForRecommendation = [...priorityCandidates];
-  const recommendations = freePeriods.map(fp => {
-    // Find task that fits in duration
-    const recIndex = availableForRecommendation.findIndex(t => t.estimated_minutes && t.estimated_minutes <= fp.duration);
-    let recommendedTask = null;
-    if (recIndex !== -1) {
-      recommendedTask = availableForRecommendation[recIndex];
-      availableForRecommendation.splice(recIndex, 1);
-    }
-    return { ...fp, recommendedTask };
-  });
-
-  type ScheduledTimelineItem = {
-    isFreePeriod: false;
-    id: string;
-    title: string;
-    start_time: string;
-    end_time: string;
-    location: string | null;
-    type: 'class' | 'activity';
-    original: any;
-    start: string;
-  };
-
-  type FreePeriodTimelineItem = {
-    isFreePeriod: true;
-    start: string;
-    end: string;
-    duration: number;
-    recommendedTask: Task | null;
-  };
-
-  type TimelineElement = ScheduledTimelineItem | FreePeriodTimelineItem;
-
-  const allTimelineElements: TimelineElement[] = [
-    ...scheduledItems.map(item => ({ ...item, start: item.start_time, isFreePeriod: false as const })),
-    ...recommendations.map(fp => ({ ...fp, isFreePeriod: true as const }))
-  ].sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+  const allTimelineElements = generateTimeline(classes, activities, priorityCandidates);
 
   const handleToggle = async (id: number, completed: boolean) => {
     await toggleTaskCompletion(id, !completed);
@@ -258,7 +189,7 @@ export default function TodayClient({
                     </div>
                   ) : (
                     <p className="text-sm text-zinc-600 dark:text-zinc-400 bg-white/40 dark:bg-zinc-800/40 p-3 rounded-lg">
-                      {scheduledItems.length === 0 ? "No classes today 🎉" : "No more scheduled items today."}
+                      {classes.length === 0 && activities.length === 0 ? "No classes today 🎉" : "No more scheduled items today."}
                     </p>
                   )}
                 </div>
@@ -348,70 +279,7 @@ export default function TodayClient({
             SCHEDULE
           </h2>
           
-          <div className="space-y-4">
-            {allTimelineElements.length === 0 ? (
-              <div className="py-8 text-center border rounded-xl border-dashed">
-                <p className="text-zinc-500">Nothing scheduled for this date 🎉</p>
-              </div>
-            ) : (
-              <div className="relative border-l-2 border-zinc-100 dark:border-zinc-800 ml-3 space-y-6">
-                {allTimelineElements.map((item, idx) => {
-                  if (item.isFreePeriod) {
-                    return (
-                      <div key={`fp-${idx}`} className="relative pl-6">
-                        <div className="absolute w-3 h-3 bg-green-100 border-2 border-green-500 rounded-full -left-[7.5px] top-1.5 dark:bg-green-900" />
-                        <div className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">
-                          FREE PERIOD · {item.start} - {item.end} ({Math.round(item.duration / 60) > 0 ? `${Math.round(item.duration / 60)}h ` : ''}{item.duration % 60}m)
-                        </div>
-                        {item.recommendedTask && (
-                          <Card className="bg-green-50/50 border-green-100 dark:bg-green-950/20 dark:border-green-900/50 shadow-none">
-                            <CardContent className="p-3">
-                              <p className="text-xs font-medium text-zinc-500 mb-1 uppercase tracking-wider">Recommended Task</p>
-                              <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-4 h-4 mt-0.5 text-zinc-300" />
-                                <div>
-                                  <p className="text-sm font-medium">{item.recommendedTask.title}</p>
-                                  <p className="text-xs text-zinc-500 mt-0.5">
-                                    Est: {item.recommendedTask.estimated_minutes} min · {item.recommendedTask.priority} priority
-                                  </p>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  // Scheduled Item
-                  return (
-                    <div key={item.id} className="relative pl-6">
-                      <div className={`absolute w-3 h-3 border-2 rounded-full -left-[7.5px] top-1.5 bg-white dark:bg-zinc-950 ${item.type === 'class' ? 'border-blue-500' : 'border-purple-500'}`} />
-                      <div className="text-xs font-semibold text-zinc-500 mb-1">
-                        {item.start_time} - {item.end_time}
-                      </div>
-                      <Card className="shadow-sm">
-                        <CardContent className="p-4">
-                          <p className="font-semibold">{item.title}</p>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-zinc-500">
-                            {item.location && (
-                              <div className="flex items-center gap-1.5">
-                                <BookOpen className="w-4 h-4" />
-                                <span>{item.location}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="outline" className="text-[10px] font-normal px-1.5">{item.type === 'class' ? 'Class' : 'Activity'}</Badge>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <DailyTimeline allTimelineElements={allTimelineElements} emptyMessage="Nothing scheduled for this date 🎉" />
         </div>
 
         {/* TASKS TO COMPLETE */}

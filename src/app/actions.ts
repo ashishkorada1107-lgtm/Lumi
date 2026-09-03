@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/server"
 // --- TASKS ---
 export async function addTask(formData: FormData) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Unauthorized")
+
   const title = formData.get("title") as string
   const description = formData.get("description") as string
   const dueDate = formData.get("dueDate") as string
@@ -13,6 +16,7 @@ export async function addTask(formData: FormData) {
   const estimatedMinutes = parseInt(formData.get("estimatedMinutes") as string) || 0
 
   await supabase.from("tasks").insert({
+    user_id: user.id,
     title,
     description,
     due_date: dueDate || null,
@@ -61,7 +65,11 @@ export async function deleteTask(id: number) {
 // --- CLASSES ---
 export async function addClass(formData: FormData) {
   const supabase = await createClient()
-  await supabase.from("classes").insert({
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Unauthorized")
+
+  const { error } = await supabase.from("classes").insert({
+    user_id: user.id,
     title: formData.get("title") as string,
     day_of_week: formData.get("day_of_week") as string,
     start_time: formData.get("start_time") as string,
@@ -69,6 +77,9 @@ export async function addClass(formData: FormData) {
     room: formData.get("room") as string,
     faculty: formData.get("faculty") as string,
   })
+  if (error) {
+    console.error("ADD CLASS ERROR:", error)
+  }
   revalidatePath("/schedule")
   revalidatePath("/")
 }
@@ -97,7 +108,11 @@ export async function deleteClass(id: number) {
 // --- ACTIVITIES ---
 export async function addActivity(formData: FormData) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Unauthorized")
+
   await supabase.from("activities").insert({
+    user_id: user.id,
     title: formData.get("title") as string,
     type: formData.get("type") as string,
     date: formData.get("date") as string,
