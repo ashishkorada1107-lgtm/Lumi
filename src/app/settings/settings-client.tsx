@@ -20,7 +20,7 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-export default function SettingsClient({ userEmail, initialName }: { userEmail: string, initialName: string }) {
+export default function SettingsClient({ userEmail, initialName, vapidPublicKey }: { userEmail: string, initialName: string, vapidPublicKey: string }) {
   const [displayName, setDisplayName] = useState(initialName);
   const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [briefingEnabled, setBriefingEnabled] = useState(false);
@@ -164,7 +164,7 @@ export default function SettingsClient({ userEmail, initialName }: { userEmail: 
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string)
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey.replace(/['"]/g, '').trim())
         });
 
         const subJSON = JSON.parse(JSON.stringify(sub));
