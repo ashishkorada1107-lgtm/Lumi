@@ -8,19 +8,9 @@ export default async function proxy(request: NextRequest) {
     },
   })
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('Proxy Error: Missing Supabase URL or Anon Key in environment variables.')
-    // Return early to prevent opaque runtime crash, allowing the request to continue unauthenticated
-    // which the application can handle or redirect as needed.
-    return supabaseResponse
-  }
-
   const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
     {
       cookies: {
         getAll() {
