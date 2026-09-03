@@ -162,6 +162,13 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
         }
 
         const reg = await navigator.serviceWorker.ready;
+        
+        // Unsubscribe from any existing subscription to clear old VAPID keys
+        const existingSub = await reg.pushManager.getSubscription();
+        if (existingSub) {
+          await existingSub.unsubscribe();
+        }
+
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey.replace(/['"]/g, '').trim())
