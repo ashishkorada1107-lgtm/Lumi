@@ -7,13 +7,7 @@ import { toZonedTime } from 'date-fns-tz';
 
 export const dynamic = "force-dynamic";
 
-if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:test@example.com",
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
-}
+import { configureWebPush } from '@/lib/webpush';
 
 export async function GET(request: Request) {
   try {
@@ -26,6 +20,11 @@ export async function GET(request: Request) {
     
     if (!isLocalDev && authHeader !== expectedAuth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const config = configureWebPush();
+    if (!config.success) {
+      return NextResponse.json({ error: config.error }, { status: 500 });
     }
 
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {

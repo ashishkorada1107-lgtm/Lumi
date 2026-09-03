@@ -5,11 +5,7 @@ import webpush from "web-push";
 import { generateMorningBriefing } from "@/lib/briefing";
 import { format } from "date-fns";
 
-webpush.setVapidDetails(
-  "mailto:test@example.com",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string,
-  process.env.VAPID_PRIVATE_KEY as string
-);
+import { configureWebPush } from "@/lib/webpush";
 
 export async function savePushSubscription(deviceId: string, subJSON: any, timezone: string, briefingTime: string, briefingEnabled: boolean) {
   const supabase = await createClient();
@@ -89,6 +85,11 @@ export async function sendTestNotification(deviceId: string) {
                (briefing.priorityTask ? `🔴 Priority:\n${briefing.priorityTask.title}\n\n` : "") + 
                (briefing.nextScheduled ? `Next:\n${briefing.nextScheduled.title} — ${briefing.nextScheduled.time}\n\n` : "") +
                (briefing.freeTime ? `You have free time: ${briefing.freeTime}` : "");
+
+  const config = configureWebPush();
+  if (!config.success) {
+    return { error: config.error };
+  }
 
   try {
     await webpush.sendNotification(sub.subscription as any, JSON.stringify({ title, body }));
