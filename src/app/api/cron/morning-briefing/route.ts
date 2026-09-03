@@ -32,8 +32,11 @@ export async function GET(request: Request) {
     }
 
     // 2. Use Service Role to query ALL push_subscriptions bypassing RLS
+    const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+    
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseUrl,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
