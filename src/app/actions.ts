@@ -121,6 +121,7 @@ export async function addActivity(formData: FormData) {
     location: formData.get("location") as string,
   })
   revalidatePath("/activities")
+  revalidatePath("/schedule")
   revalidatePath("/")
 }
 
@@ -135,6 +136,7 @@ export async function editActivity(id: number, formData: FormData) {
     location: formData.get("location") as string,
   }).eq("id", id)
   revalidatePath("/activities")
+  revalidatePath("/schedule")
   revalidatePath("/")
 }
 
@@ -142,6 +144,7 @@ export async function deleteActivity(id: number) {
   const supabase = await createClient()
   await supabase.from("activities").delete().eq("id", id)
   revalidatePath("/activities")
+  revalidatePath("/schedule")
   revalidatePath("/")
 }
 

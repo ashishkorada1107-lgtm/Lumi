@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { format, parseISO, startOfWeek, endOfWeek } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import ScheduleClient from "./ScheduleClient";
 
 export default async function SchedulePage(props: { searchParams: Promise<{ date?: string }> }) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
   
-  const targetDateStr = searchParams.date || format(new Date(), "yyyy-MM-dd");
+  const actualTodayObj = toZonedTime(new Date(), "Asia/Kolkata");
+  const targetDateStr = searchParams.date || format(actualTodayObj, "yyyy-MM-dd");
   const targetDateObj = parseISO(targetDateStr);
   const targetDayOfWeek = format(targetDateObj, "EEEE");
 
@@ -33,7 +35,7 @@ export default async function SchedulePage(props: { searchParams: Promise<{ date
   if (activitiesError) console.error("Error fetching activities:", activitiesError);
   if (tasksError) console.error("Error fetching tasks:", tasksError);
 
-  const actualTodayStr = format(new Date(), "yyyy-MM-dd");
+  const actualTodayStr = format(actualTodayObj, "yyyy-MM-dd");
 
   return (
     <ScheduleClient 

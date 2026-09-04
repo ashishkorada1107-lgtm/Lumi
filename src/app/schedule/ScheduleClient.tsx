@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { format, parseISO, addDays as addDaysFn, subDays } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,8 +53,9 @@ function WeeklyCurrentTimeLine({ weekDates, actualTodayStr }: { weekDates: strin
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    setCurrentTime(new Date());
-    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    const updateTime = () => setCurrentTime(toZonedTime(new Date(), "Asia/Kolkata"));
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -217,15 +219,13 @@ export default function ScheduleClient({
   };
 
   const DaySelector = ({ selected, onChange }: { selected: string[], onChange: (d: string[]) => void }) => (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {DAYS.map(day => {
         const isSelected = selected.includes(day);
         return (
-          <Button 
+          <button 
             key={day} 
             type="button" 
-            variant={isSelected ? "default" : "outline"} 
-            size="sm"
             onClick={() => {
               if (isSelected) {
                 onChange(selected.filter(d => d !== day));
@@ -233,10 +233,14 @@ export default function ScheduleClient({
                 onChange([...selected, day]);
               }
             }}
-            className={isSelected ? "bg-zinc-900 text-zinc-50" : "text-zinc-600"}
+            className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors ${
+              isSelected 
+                ? "bg-indigo-600 text-white border-indigo-500" 
+                : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200 hover:bg-zinc-700/60"
+            }`}
           >
             {day.slice(0, 3)}
-          </Button>
+          </button>
         );
       })}
     </div>
@@ -305,122 +309,132 @@ export default function ScheduleClient({
   }, [tasksForWeek]);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 dark:border-zinc-800">
-        <h1 className="text-3xl font-bold tracking-tight">Schedule</h1>
-        <div className="inline-flex h-10 items-center justify-center rounded-md bg-zinc-100 p-1 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-          <button 
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-1">Manage</p>
+          <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">Schedule</h1>
+        </div>
+        <div className="inline-flex items-center rounded-full bg-zinc-800/80 p-0.5 gap-0.5">
+          <button
             onClick={() => setView('daily')}
-            className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 ${view === 'daily' ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-950 dark:text-zinc-50' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
+            className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-150 ${view === 'daily' ? 'bg-zinc-600 text-zinc-50 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Daily
           </button>
-          <button 
+          <button
             onClick={() => setView('weekly')}
-            className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 ${view === 'weekly' ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-950 dark:text-zinc-50' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
+            className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-150 ${view === 'weekly' ? 'bg-zinc-600 text-zinc-50 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Weekly
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 gap-6">
         {view === 'daily' && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-              <div className="flex flex-col space-y-2">
-                <div className="text-zinc-900 font-semibold dark:text-zinc-100 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-zinc-500" />
-                  {formattedDate} {isActualToday && <Badge variant="secondary" className="ml-2">Today</Badge>}
-                </div>
-              </div>
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => navDate(-1)}>
+                <span className="text-sm font-medium text-zinc-200">{formattedDate}</span>
+                {isActualToday && (
+                  <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Today
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800" onClick={() => navDate(-1)}>
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
                 {!isActualToday && (
-                  <Button variant="outline" onClick={navToday}>Today</Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800" onClick={navToday}>Today</Button>
                 )}
-                <Button variant="outline" size="icon" onClick={() => navDate(1)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800" onClick={() => navDate(1)}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-            
+
             <DailyTimeline allTimelineElements={allTimelineElements} emptyMessage="Nothing scheduled for this date." />
           </div>
         )}
 
+
         {view === 'weekly' && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 pb-2">
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-end gap-3">
               <div className="flex gap-2 items-center">
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">Class</Badge>
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">Task Due</Badge>
-                
-                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="ml-4">
-                      <Plus className="w-4 h-4 mr-2" /> Add Class
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
+                  <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" /> Class
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> Task Due
+                </span>
+              </div>
+
+              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none">
+                    <Plus className="w-4 h-4 mr-1.5" /> Add Class
+                  </Button>
+                </DialogTrigger>
+                  <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
                     <DialogHeader>
-                      <DialogTitle>Add New Class</DialogTitle>
+                      <DialogTitle className="text-zinc-100">Add New Class</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleAddSubmit} className="space-y-4">
-                      {addError && <div className="text-sm text-red-500 font-medium">{addError}</div>}
-                      <div className="space-y-2">
-                        <Label htmlFor="title">Subject/Class Name</Label>
-                        <Input id="title" value={addTitle} onChange={e => setAddTitle(e.target.value)} placeholder="Machine Learning" />
+                      {addError && <div className="text-sm text-red-400 font-medium">{addError}</div>}
+                      <div className="space-y-1.5">
+                        <Label htmlFor="title" className="text-zinc-400 text-xs uppercase tracking-wider">Subject / Class Name</Label>
+                        <Input id="title" value={addTitle} onChange={e => setAddTitle(e.target.value)} placeholder="Machine Learning" className="bg-zinc-800 border-zinc-700 text-zinc-100 focus:border-indigo-500" />
                       </div>
-                      <div className="space-y-2">
-                        <Label>Days of Week</Label>
+                      <div className="space-y-1.5">
+                        <Label className="text-zinc-400 text-xs uppercase tracking-wider">Days of Week</Label>
                         <DaySelector selected={addDays} onChange={setAddDays} />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="start_time">Start Time</Label>
-                          <Input id="start_time" type="time" value={addStart} onChange={e => setAddStart(e.target.value)} />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="start_time" className="text-zinc-400 text-xs uppercase tracking-wider">Start Time</Label>
+                          <Input id="start_time" type="time" value={addStart} onChange={e => setAddStart(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="end_time">End Time</Label>
-                          <Input id="end_time" type="time" value={addEnd} onChange={e => setAddEnd(e.target.value)} />
+                        <div className="space-y-1.5">
+                          <Label htmlFor="end_time" className="text-zinc-400 text-xs uppercase tracking-wider">End Time</Label>
+                          <Input id="end_time" type="time" value={addEnd} onChange={e => setAddEnd(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="room">Room</Label>
-                          <Input id="room" value={addRoom} onChange={e => setAddRoom(e.target.value)} placeholder="AB204" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="room" className="text-zinc-400 text-xs uppercase tracking-wider">Room</Label>
+                          <Input id="room" value={addRoom} onChange={e => setAddRoom(e.target.value)} placeholder="AB204" className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="faculty">Faculty</Label>
-                          <Input id="faculty" value={addFaculty} onChange={e => setAddFaculty(e.target.value)} placeholder="Dr. Mohan" />
+                        <div className="space-y-1.5">
+                          <Label htmlFor="faculty" className="text-zinc-400 text-xs uppercase tracking-wider">Faculty</Label>
+                          <Input id="faculty" value={addFaculty} onChange={e => setAddFaculty(e.target.value)} placeholder="Dr. Mohan" className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button type="submit">Save Class</Button>
+                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">Save Class</Button>
                       </DialogFooter>
                     </form>
                   </DialogContent>
                 </Dialog>
               </div>
-            </div>
 
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden bg-zinc-900/40 border-zinc-800/80 rounded-xl">
               <div className="overflow-x-auto">
                 <div className="min-w-[800px] w-full">
                   {/* Header — shows day abbreviation + actual date */}
-                  <div className="grid grid-cols-8 border-b dark:border-zinc-800">
-                    <div className="p-4 border-r dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+                  <div className="grid grid-cols-8 border-b border-zinc-800/80">
+                    <div className="p-3 border-r border-zinc-800/80 bg-zinc-900/60">
                     </div>
                     {DAYS.map((day, i) => {
                       const dateStr = weekDates[i];
                       const isToday = dateStr === actualTodayStr;
                       return (
-                        <div key={day} className={`p-3 text-center border-r last:border-r-0 dark:border-zinc-800 ${isToday ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-zinc-50 dark:bg-zinc-900/50'}`}>
-                          <div className={`text-xs font-medium ${isToday ? 'text-zinc-100 dark:text-zinc-900' : 'text-zinc-500'}`}>{day.slice(0, 3)}</div>
-                          <div className={`text-sm font-bold mt-0.5 ${isToday ? 'text-zinc-100 dark:text-zinc-900' : 'text-zinc-800 dark:text-zinc-200'}`}>
+                        <div key={day} className={`p-2.5 text-center border-r last:border-r-0 border-zinc-800/80 ${isToday ? 'bg-zinc-800 text-zinc-50' : 'bg-zinc-900/60'}`}>
+                          <div className={`text-[11px] font-medium ${isToday ? 'text-zinc-200' : 'text-zinc-500'}`}>{day.slice(0, 3)}</div>
+                          <div className={`text-sm font-semibold mt-0.5 ${isToday ? 'text-white' : 'text-zinc-300'}`}>
                             {format(parseISO(dateStr), 'd')}
                           </div>
                         </div>
@@ -429,21 +443,23 @@ export default function ScheduleClient({
                   </div>
 
                   {/* Body — time grid + overlaid class blocks */}
-                  <div className="divide-y dark:divide-zinc-800 relative">
-                    {TIME_SLOTS.map((time, index) => (
-                      <div key={time} className="grid grid-cols-8 relative h-20">
-                        <div className="h-full border-r dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20 text-center flex items-center justify-center">
-                          <span className="text-xs text-zinc-500 font-medium relative -top-3 bg-zinc-50/50 dark:bg-zinc-900/20 px-1">{DISPLAY_TIME_SLOTS[index]}</span>
+                  <div className="relative">
+                    <div className="divide-y divide-zinc-800/60">
+                      {TIME_SLOTS.map((time, index) => (
+                        <div key={time} className="grid grid-cols-8 h-20">
+                          <div className="h-full border-r border-zinc-800/60 bg-zinc-900/30 text-center flex items-center justify-center">
+                            <span className="text-[11px] text-zinc-500 font-medium relative -top-3 px-1">{DISPLAY_TIME_SLOTS[index]}</span>
+                          </div>
+                          
+                          {DAYS.map((day) => {
+                            return (
+                              <div key={`${day}-${time}`} className="border-r last:border-r-0 border-zinc-800/60">
+                              </div>
+                            );
+                          })}
                         </div>
-                        
-                        {DAYS.map((day) => {
-                          return (
-                            <div key={`${day}-${time}`} className="border-r last:border-r-0 dark:border-zinc-800 relative">
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                     
                     {/* Overlay Classes */}
                     {initialClasses.map((cls) => {
@@ -467,7 +483,7 @@ export default function ScheduleClient({
                         return (
                           <div 
                             key={`${cls.id}-${day}`}
-                            className="absolute p-2 rounded-md border text-xs flex flex-col gap-1 overflow-hidden bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/70 dark:border-blue-800 dark:text-blue-100 cursor-pointer shadow-sm hover:shadow transition-shadow z-10"
+                            className="absolute p-2 rounded-lg border-l-2 text-xs flex flex-col gap-0.5 overflow-hidden bg-zinc-800/90 border border-zinc-700/60 border-l-indigo-500 text-zinc-100 cursor-pointer shadow-sm hover:bg-zinc-700/80 transition-all z-10"
                             style={{
                               top: `${topOffset}px`,
                               height: `${height}px`,
@@ -476,9 +492,9 @@ export default function ScheduleClient({
                             }}
                             onClick={() => setEditClassData(cls)}
                           >
-                            <span className="font-semibold leading-tight line-clamp-2">{cls.title}</span>
-                            <span className="opacity-80 mt-auto truncate">{cls.start_time} - {cls.end_time}</span>
-                            <span className="opacity-80 truncate">{cls.room}</span>
+                            <span className="font-semibold leading-tight line-clamp-2 text-[11px] text-zinc-100">{cls.title}</span>
+                            <span className="text-[10px] text-zinc-400 mt-auto truncate">{cls.start_time} - {cls.end_time}</span>
+                            {cls.room && <span className="text-[10px] text-zinc-500 truncate">{cls.room}</span>}
                           </div>
                         );
                       });
@@ -489,32 +505,32 @@ export default function ScheduleClient({
 
                   {/* Tasks Due row — shown below the timetable if any tasks exist for this week */}
                   {tasksForWeek.length > 0 && (
-                    <div className="border-t dark:border-zinc-800">
+                    <div className="border-t border-zinc-800/80">
                       <div className="grid grid-cols-8">
                         {/* Row label */}
-                        <div className="p-3 border-r dark:border-zinc-800 bg-amber-50/60 dark:bg-amber-950/20 flex items-start">
+                        <div className="p-3 border-r border-zinc-800/80 bg-zinc-900/60 flex items-start justify-center">
                           <div className="flex flex-col items-center gap-1">
-                            <CheckSquare className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                            <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 [writing-mode:vertical-rl] rotate-180 mt-1">Due</span>
+                            <CheckSquare className="w-3.5 h-3.5 text-amber-400" />
+                            <span className="text-[9px] font-semibold text-amber-400 uppercase tracking-wider [writing-mode:vertical-rl] rotate-180 mt-1">Due</span>
                           </div>
                         </div>
                         {/* One cell per day */}
-                        {weekDates.map((dateStr, i) => {
+                        {weekDates.map((dateStr) => {
                           const dayTasks = tasksByDate[dateStr] || [];
                           return (
-                            <div key={dateStr} className="p-2 border-r last:border-r-0 dark:border-zinc-800 bg-amber-50/30 dark:bg-amber-950/10 min-h-[64px]">
+                            <div key={dateStr} className="p-2 border-r last:border-r-0 border-zinc-800/80 bg-zinc-900/30 min-h-[56px]">
                               <div className="flex flex-col gap-1">
                                 {dayTasks.map(task => (
                                   <div
                                     key={task.id}
-                                    className="rounded px-1.5 py-1 text-[11px] leading-tight bg-amber-100 border border-amber-200 text-amber-900 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-100 flex items-start gap-1"
+                                    className="rounded px-1.5 py-1 text-[11px] leading-tight bg-zinc-800/90 border border-zinc-700/60 border-l-2 border-l-amber-500 text-zinc-200 flex items-start gap-1"
                                     title={task.description || task.title}
                                   >
-                                    <CheckSquare className="w-3 h-3 mt-0.5 shrink-0 opacity-70" />
+                                    <CheckSquare className="w-3 h-3 mt-0.5 shrink-0 text-amber-400" />
                                     <div className="min-w-0">
-                                      <div className="font-semibold truncate">{task.title}</div>
-                                      <div className="opacity-70 flex items-center gap-1 mt-0.5">
-                                        <span className={`inline-block w-1.5 h-1.5 rounded-full ${task.priority === 'High' ? 'bg-red-500' : task.priority === 'Medium' ? 'bg-yellow-500' : 'bg-zinc-400'}`} />
+                                      <div className="font-medium truncate text-zinc-200">{task.title}</div>
+                                      <div className="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5">
+                                        <span className={`inline-block w-1.5 h-1.5 rounded-full ${task.priority === 'High' ? 'bg-red-400' : task.priority === 'Medium' ? 'bg-amber-400' : 'bg-zinc-500'}`} />
                                         <span>{task.priority}</span>
                                       </div>
                                     </div>
@@ -534,46 +550,46 @@ export default function ScheduleClient({
 
             {/* Edit Dialog */}
             <Dialog open={!!editClassData} onOpenChange={(o) => !o && setEditClassData(null)}>
-              <DialogContent>
+              <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
                 <DialogHeader>
-                  <DialogTitle>Edit Class</DialogTitle>
+                  <DialogTitle className="text-zinc-100">Edit Class</DialogTitle>
                 </DialogHeader>
                 {editClassData && (
                   <form onSubmit={handleEditSubmit} className="space-y-4">
-                    {editError && <div className="text-sm text-red-500 font-medium">{editError}</div>}
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-title">Subject/Class Name</Label>
-                      <Input id="edit-title" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+                    {editError && <div className="text-sm text-red-400 font-medium">{editError}</div>}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="edit-title" className="text-zinc-400 text-xs uppercase tracking-wider">Subject / Class Name</Label>
+                      <Input id="edit-title" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100 focus:border-indigo-500" />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Days of Week</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-zinc-400 text-xs uppercase tracking-wider">Days of Week</Label>
                       <DaySelector selected={editDays} onChange={setEditDays} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-start_time">Start Time</Label>
-                        <Input id="edit-start_time" type="time" value={editStart} onChange={e => setEditStart(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="edit-start_time" className="text-zinc-400 text-xs uppercase tracking-wider">Start Time</Label>
+                        <Input id="edit-start_time" type="time" value={editStart} onChange={e => setEditStart(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-end_time">End Time</Label>
-                        <Input id="edit-end_time" type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)} />
+                      <div className="space-y-1.5">
+                        <Label htmlFor="edit-end_time" className="text-zinc-400 text-xs uppercase tracking-wider">End Time</Label>
+                        <Input id="edit-end_time" type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-room">Room</Label>
-                        <Input id="edit-room" value={editRoom} onChange={e => setEditRoom(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="edit-room" className="text-zinc-400 text-xs uppercase tracking-wider">Room</Label>
+                        <Input id="edit-room" value={editRoom} onChange={e => setEditRoom(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-faculty">Faculty</Label>
-                        <Input id="edit-faculty" value={editFaculty} onChange={e => setEditFaculty(e.target.value)} />
+                      <div className="space-y-1.5">
+                        <Label htmlFor="edit-faculty" className="text-zinc-400 text-xs uppercase tracking-wider">Faculty</Label>
+                        <Input id="edit-faculty" value={editFaculty} onChange={e => setEditFaculty(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                       </div>
                     </div>
                     <DialogFooter className="flex-row justify-between">
                       <Button type="button" variant="destructive" onClick={handleDelete}>
                         <Trash2 className="w-4 h-4 mr-2" /> Delete
                       </Button>
-                      <Button type="submit">Save Changes</Button>
+                      <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">Save Changes</Button>
                     </DialogFooter>
                   </form>
                 )}

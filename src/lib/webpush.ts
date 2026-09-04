@@ -24,10 +24,11 @@ export function configureWebPush(): { success: true } | { success: false, error:
       privateKey.trim()
     );
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     return { 
       success: false, 
-      error: "Failed to initialize VAPID keys: " + err.message
+      error: "Failed to initialize VAPID keys: " + errorMsg
     };
   }
 }

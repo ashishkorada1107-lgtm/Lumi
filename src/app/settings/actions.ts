@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import webpush from "web-push";
 import { generateMorningBriefing } from "@/lib/briefing";
 import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 
 import { configureWebPush } from "@/lib/webpush";
 
@@ -53,7 +54,7 @@ export async function sendTestNotification(deviceId: string) {
   }
   if (!sub) return { error: "No subscription found" };
 
-  const actualTodayObj = new Date();
+  const actualTodayObj = toZonedTime(new Date(), "Asia/Kolkata");
   const actualTodayStr = format(actualTodayObj, "yyyy-MM-dd");
   const currentTimeStr = format(actualTodayObj, "HH:mm");
   const targetDayOfWeek = format(actualTodayObj, "EEEE");

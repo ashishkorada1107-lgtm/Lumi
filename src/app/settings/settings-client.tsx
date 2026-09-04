@@ -226,78 +226,82 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div>
+        <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-1">Preferences</p>
+        <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">Settings</h1>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Manage your public profile details.</CardDescription>
+      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-medium text-zinc-100">Profile</CardTitle>
+          <CardDescription className="text-xs text-zinc-500">Manage your public profile details.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="displayName">Name</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="displayName" className="text-xs font-medium uppercase tracking-wider text-zinc-400">Name</Label>
             <Input 
               id="displayName"
               value={displayName} 
               onChange={(e) => setDisplayName(e.target.value)} 
               placeholder="Your Name"
+              className="bg-zinc-800/80 border-zinc-700/60 text-zinc-100 focus:border-indigo-500"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <div className="text-sm px-3 py-2 border rounded-md bg-zinc-50 dark:bg-zinc-900/50 text-zinc-500">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium uppercase tracking-wider text-zinc-400">Email</Label>
+            <div className="text-sm px-3 py-2 border border-zinc-800 rounded-md bg-zinc-800/40 text-zinc-400">
               {userEmail}
             </div>
           </div>
 
           {profileMessage && (
-            <div className={`p-2.5 rounded-md text-sm font-medium ${profileMessage.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
+            <div className={`p-2.5 rounded-md text-sm font-medium ${profileMessage.type === 'error' ? 'bg-red-950/40 text-red-400 border border-red-800/40' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'}`}>
               {profileMessage.text}
             </div>
           )}
 
-          <Button onClick={handleSaveProfile} className="w-full">
+          <Button onClick={handleSaveProfile} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none">
             Save changes
           </Button>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>Manage your Lumi account.</CardDescription>
+      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-medium text-zinc-100">Account</CardTitle>
+          <CardDescription className="text-xs text-zinc-500">Manage your Lumi session.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <Button variant="outline" onClick={() => {
             localStorage.removeItem("lumi_device_id");
             logout();
-          }} className="w-full">
+          }} className="w-full border-zinc-700/60 text-zinc-300 hover:text-white hover:bg-zinc-800/60">
             Log out
           </Button>
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>Configure your daily morning briefing.</CardDescription>
+      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-medium text-zinc-100">Notifications</CardTitle>
+          <CardDescription className="text-xs text-zinc-500">Configure your daily morning briefing.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-5">
           {errorMsg && (
-            <div className="bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm font-medium">
+            <div className="bg-red-950/30 text-red-400 border border-red-800/40 p-3 rounded-lg text-sm font-medium">
               {errorMsg}
             </div>
           )}
           
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label className="text-base">Enable Morning Briefing</Label>
-              <p className="text-sm text-zinc-500">
+              <Label className="text-sm text-zinc-200">Enable Morning Briefing</Label>
+              <p className="text-xs text-zinc-500">
                 Receive a push notification every morning with your day at a glance.
               </p>
-              <p className="text-xs font-medium text-zinc-400 mt-1">
+              <p className="text-[11px] font-medium text-zinc-400 mt-1">
                 Status: {subStatus}
               </p>
             </div>
@@ -310,11 +314,11 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label className="text-base">Morning briefing time</Label>
-              <p className="text-sm text-zinc-500">
-                The time you'll receive your notification.
+              <Label className="text-sm text-zinc-200">Morning briefing time</Label>
+              <p className="text-xs text-zinc-500">
+                The time you&apos;ll receive your notification.
               </p>
-              <p className="text-xs font-medium text-zinc-400 mt-1">
+              <p className="text-[11px] font-medium text-zinc-400 mt-1">
                 Timezone: {timezone}
               </p>
             </div>
@@ -322,31 +326,31 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
               type="time" 
               value={briefingTime} 
               onChange={handleTimeChange} 
-              className="w-32"
+              className="w-32 bg-zinc-800/80 border-zinc-700/60 text-zinc-100"
             />
           </div>
 
-          <div className="pt-4 border-t dark:border-zinc-800">
-            <Button variant="outline" onClick={handleTest} disabled={!briefingEnabled}>
+          <div className="pt-4 border-t border-zinc-800/80">
+            <Button variant="outline" onClick={handleTest} disabled={!briefingEnabled} className="border-zinc-700/60 text-zinc-300 hover:text-white hover:bg-zinc-800/60">
               Send Test Notification
             </Button>
-            <p className="text-xs text-zinc-500 mt-2">
-              Development only. This immediately triggers a briefing notification using today's data.
+            <p className="text-[11px] text-zinc-500 mt-2">
+              Development only. This immediately triggers a briefing notification using today&apos;s data.
             </p>
           </div>
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Important Deployment Note</CardTitle>
+      <Card className="bg-zinc-900/20 border border-zinc-800/50 rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-zinc-400">Important Deployment Note</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-            Push notifications are now enabled using the standard Web Push API. However, to receive the notification <strong>automatically every morning without the app being open</strong>, a backend Cron Job is required.
+          <p className="text-xs text-zinc-500 leading-relaxed mb-3">
+            Push notifications are enabled using the standard Web Push API. To receive notifications <strong>automatically every morning without the app being open</strong>, a backend Cron Job is required.
           </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            When you deploy Lumi to Vercel or your preferred platform, you will need to set up a Cron Job (e.g., Vercel Cron) that hits a secure API endpoint daily. That API endpoint should query the `push_subscriptions` table, check the user's saved briefing time, and use the `web-push` library to send the generated briefing directly to their device.
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            In production on Vercel, the Cron Job triggers the secure API endpoint daily to send the generated briefing directly to subscribed devices.
           </p>
         </CardContent>
       </Card>

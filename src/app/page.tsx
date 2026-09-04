@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { format, parseISO } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import TodayClient from "./TodayClient";
 import { generateMorningBriefing } from "@/lib/briefing";
 
@@ -8,7 +9,7 @@ export default async function TodayPage(props: { searchParams: Promise<{ date?: 
   const searchParams = await props.searchParams;
   const supabase = await createClient();
   
-  const actualTodayObj = new Date();
+  const actualTodayObj = toZonedTime(new Date(), "Asia/Kolkata");
   const actualTodayStr = format(actualTodayObj, "yyyy-MM-dd");
   const currentTimeStr = format(actualTodayObj, "HH:mm");
   
@@ -52,7 +53,8 @@ export default async function TodayPage(props: { searchParams: Promise<{ date?: 
       targetDateStr={targetDateStr}
       actualTodayStr={actualTodayStr}
       briefing={briefing}
-      userName={profile?.display_name}
+      userName={profile?.display_name || undefined}
+      serverHour={actualTodayObj.getHours()}
     />
   );
 }

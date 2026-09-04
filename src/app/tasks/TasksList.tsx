@@ -39,8 +39,9 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
   const [editError, setEditError] = useState("");
 
   // Reset form when opening
-  useEffect(() => {
-    if (isAddOpen) {
+  const openAddDialog = (open: boolean) => {
+    setIsAddOpen(open);
+    if (open) {
       setAddTitle("");
       setAddDesc("");
       setAddDate("");
@@ -48,18 +49,19 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
       setAddPriority("Medium");
       setAddError("");
     }
-  }, [isAddOpen]);
+  };
 
-  useEffect(() => {
-    if (editTaskData) {
-      setEditTitle(editTaskData.title);
-      setEditDesc(editTaskData.description || "");
-      setEditDate(editTaskData.due_date || "");
-      setEditMin(editTaskData.estimated_minutes ? String(editTaskData.estimated_minutes) : "");
-      setEditPriority(editTaskData.priority);
+  const openEditDialog = (task: Task | null) => {
+    setEditTaskData(task);
+    if (task) {
+      setEditTitle(task.title);
+      setEditDesc(task.description || "");
+      setEditDate(task.due_date || "");
+      setEditMin(task.estimated_minutes ? String(task.estimated_minutes) : "");
+      setEditPriority(task.priority);
       setEditError("");
     }
-  }, [editTaskData]);
+  };
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,45 +148,78 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
-        
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+    <div className="max-w-3xl mx-auto space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-1">Manage</p>
+          <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">Tasks</h1>
+        </div>
+
+        <Dialog open={isAddOpen} onOpenChange={openAddDialog}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus className="w-4 h-4 mr-2" /> Add Task
+            <Button
+              size="sm"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              New Task
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-zinc-900 border-zinc-800">
             <DialogHeader>
-              <DialogTitle>Add New Task</DialogTitle>
+              <DialogTitle className="text-zinc-100">Add Task</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAddSubmit} className="space-y-4">
-              {addError && <div className="text-sm text-red-500 font-medium">{addError}</div>}
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" value={addTitle} onChange={e => setAddTitle(e.target.value)} required />
+              {addError && <div className="text-sm text-red-400 font-medium">{addError}</div>}
+              <div className="space-y-1.5">
+                <Label className="text-zinc-400 text-xs uppercase tracking-wider">Title</Label>
+                <Input
+                  id="title"
+                  value={addTitle}
+                  onChange={e => setAddTitle(e.target.value)}
+                  className="bg-zinc-800 border-zinc-700 text-zinc-100 focus:border-indigo-500"
+                  required
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input id="description" value={addDesc} onChange={e => setAddDesc(e.target.value)} />
+              <div className="space-y-1.5">
+                <Label className="text-zinc-400 text-xs uppercase tracking-wider">Description</Label>
+                <Input
+                  id="description"
+                  value={addDesc}
+                  onChange={e => setAddDesc(e.target.value)}
+                  className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="dueDate">Due Date</Label>
-                  <Input id="dueDate" type="date" value={addDate} onChange={e => setAddDate(e.target.value)} />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-xs uppercase tracking-wider">Due Date</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={addDate}
+                    onChange={e => setAddDate(e.target.value)}
+                    className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedMinutes">Est. Minutes</Label>
-                  <Input id="estimatedMinutes" type="number" min="0" value={addMin} onChange={e => setAddMin(e.target.value)} />
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-xs uppercase tracking-wider">Est. Minutes</Label>
+                  <Input
+                    id="estimatedMinutes"
+                    type="number"
+                    min="0"
+                    value={addMin}
+                    onChange={e => setAddMin(e.target.value)}
+                    className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                  />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="priority">Priority</Label>
+              <div className="space-y-1.5">
+                <Label className="text-zinc-400 text-xs uppercase tracking-wider">Priority</Label>
                 <Select value={addPriority} onValueChange={setAddPriority}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                  <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-800 border-zinc-700">
                     <SelectItem value="High">High</SelectItem>
                     <SelectItem value="Medium">Medium</SelectItem>
                     <SelectItem value="Low">Low</SelectItem>
@@ -192,127 +227,137 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
                 </Select>
               </div>
               <DialogFooter>
-                <Button type="submit">Save Task</Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">
+                  Save Task
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <div className="flex gap-2 pb-2 overflow-x-auto">
-          <Button variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")} size="sm">All</Button>
-          <Button variant={filter === "pending" ? "default" : "outline"} onClick={() => setFilter("pending")} size="sm">Pending</Button>
-          <Button variant={filter === "due_today" ? "default" : "outline"} onClick={() => setFilter("due_today")} size="sm">Due Today</Button>
-          <Button variant={filter === "overdue" ? "default" : "outline"} onClick={() => setFilter("overdue")} size="sm">Overdue</Button>
-          <Button variant={filter === "completed" ? "default" : "outline"} onClick={() => setFilter("completed")} size="sm">Completed</Button>
+      {/* Filters */}
+      <div className="space-y-2">
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {(['all', 'pending', 'due_today', 'overdue', 'completed'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors duration-150 ${
+                filter === f
+                  ? 'bg-zinc-700 text-zinc-100'
+                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60'
+              }`}
+            >
+              {f === 'all' ? 'All' : f === 'due_today' ? 'Due Today' : f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
         </div>
-        <div className="flex gap-2 pb-2 overflow-x-auto">
-          <Button variant={priorityFilter === "all" ? "secondary" : "outline"} onClick={() => setPriorityFilter("all")} size="sm" className="h-7 text-xs">All Priorities</Button>
-          <Button variant={priorityFilter === "High" ? "secondary" : "outline"} onClick={() => setPriorityFilter("High")} size="sm" className="h-7 text-xs">High</Button>
-          <Button variant={priorityFilter === "Medium" ? "secondary" : "outline"} onClick={() => setPriorityFilter("Medium")} size="sm" className="h-7 text-xs">Medium</Button>
-          <Button variant={priorityFilter === "Low" ? "secondary" : "outline"} onClick={() => setPriorityFilter("Low")} size="sm" className="h-7 text-xs">Low</Button>
+        <div className="flex gap-1.5 overflow-x-auto">
+          {(['all', 'High', 'Medium', 'Low'] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPriorityFilter(p)}
+              className={`shrink-0 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors duration-150 border ${
+                priorityFilter === p
+                  ? 'bg-zinc-700 text-zinc-200 border-zinc-600'
+                  : 'text-zinc-600 border-zinc-800 hover:text-zinc-400 hover:border-zinc-700'
+              }`}
+            >
+              {p === 'all' ? 'All priorities' : p}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {filteredTasks.length === 0 && (
-          <p className="text-zinc-500 py-8 text-center border rounded-xl border-dashed">No tasks found.</p>
+          <div className="py-12 text-center border border-dashed border-zinc-800 rounded-xl">
+            <p className="text-sm text-zinc-600">No tasks found.</p>
+          </div>
         )}
         {filteredTasks.map((task) => {
           const statusInfo = getTaskStatusInfo(task);
+          const priorityBorder = task.priority === 'High' ? 'border-l-red-500/60' : task.priority === 'Medium' ? 'border-l-amber-500/60' : 'border-l-zinc-700';
           return (
-            <Card key={task.id} className={`transition-opacity ${task.completed ? 'opacity-60 bg-zinc-50 dark:bg-zinc-900/20' : ''}`}>
-              <CardContent className="p-4 sm:p-6 flex items-start gap-4">
-                <button 
-                  onClick={() => handleToggle(task.id, task.completed)}
-                  className={`mt-0.5 transition-colors ${task.completed ? 'text-green-500' : 'text-zinc-300 hover:text-green-500 dark:text-zinc-600'}`}
-                >
-                  {task.completed ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
-                </button>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                    <div>
-                      <p className={`font-medium text-lg leading-tight truncate ${task.completed ? 'line-through text-zinc-500' : ''}`}>
-                        {task.title}
-                      </p>
-                      {task.description && (
-                        <p className={`text-sm mt-1 line-clamp-2 ${task.completed ? 'text-zinc-400' : 'text-zinc-600 dark:text-zinc-400'}`}>
-                          {task.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {!task.completed && <Badge variant={statusInfo.variant} className={statusInfo.variant === "destructive" ? "" : statusInfo.badge === "Due today" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 hover:bg-blue-200" : ""}>{statusInfo.badge}</Badge>}
-                      {task.priority === 'High' && <Badge variant="destructive">High</Badge>}
-                      {task.priority === 'Medium' && <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">Medium</Badge>}
-                      {task.priority === 'Low' && <Badge variant="outline">Low</Badge>}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-4 mt-3 text-sm">
-                    {task.due_date && (
-                      <div className={`flex items-center gap-1.5 ${statusInfo.color}`}>
-                        <Calendar className="w-4 h-4" />
-                        <span>{format(new Date(task.due_date), "MMM d, yyyy")}</span>
-                      </div>
-                    )}
-                    {task.estimated_minutes && (
-                      <div className={`flex items-center gap-1.5 ${task.completed ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                        <Clock className="w-4 h-4" />
-                        <span>{task.estimated_minutes}m</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div
+              key={task.id}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border border-zinc-800/60 transition-all duration-150 ${
+                task.completed
+                  ? 'opacity-40 border-l-zinc-800'
+                  : `bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-zinc-700/60 ${priorityBorder}`
+              }`}
+            >
+              <button
+                onClick={() => handleToggle(task.id, task.completed)}
+                className={`shrink-0 transition-colors duration-150 ${task.completed ? 'text-green-500' : 'text-zinc-700 hover:text-green-400'}`}
+              >
+                {task.completed ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+              </button>
 
-                <div className="shrink-0 flex items-center">
-                  <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-zinc-900" onClick={() => setEditTaskData(task)}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-red-500" onClick={() => handleDelete(task.id, task.title)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium leading-tight truncate ${task.completed ? 'line-through text-zinc-600' : 'text-zinc-100'}`}>
+                  {task.title}
+                </p>
+                {(task.due_date || task.estimated_minutes) && (
+                  <div className="flex items-center gap-3 mt-0.5 text-[11px] text-zinc-600">
+                    {task.due_date && (
+                      <span className={statusInfo.color === 'text-red-600 dark:text-red-500' ? 'text-red-400' : statusInfo.color === 'text-blue-600 dark:text-blue-400' ? 'text-blue-400' : ''}>
+                        {format(new Date(task.due_date), "MMM d")}
+                      </span>
+                    )}
+                    {task.estimated_minutes && <span>{task.estimated_minutes}m</span>}
+                  </div>
+                )}
+              </div>
+
+              <div className="shrink-0 flex items-center gap-0.5">
+                {!task.completed && task.priority === 'High' && (
+                  <span className="text-[10px] font-semibold text-red-400 mr-1">High</span>
+                )}
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-700/50" onClick={() => openEditDialog(task)}>
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-600 hover:text-red-400 hover:bg-red-500/10" onClick={() => handleDelete(task.id, task.title)}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
           );
         })}
       </div>
 
-      {/* Edit Dialog */}
       <Dialog open={!!editTaskData} onOpenChange={(o) => !o && setEditTaskData(null)}>
-        <DialogContent>
+        <DialogContent className="bg-zinc-900 border-zinc-800">
           <DialogHeader>
-            <DialogTitle>Edit Task</DialogTitle>
+            <DialogTitle className="text-zinc-100">Edit Task</DialogTitle>
           </DialogHeader>
           {editTaskData && (
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              {editError && <div className="text-sm text-red-500 font-medium">{editError}</div>}
-              <div className="space-y-2">
-                <Label htmlFor="edit-title">Title</Label>
-                <Input id="edit-title" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
+              {editError && <div className="text-sm text-red-400 font-medium">{editError}</div>}
+              <div className="space-y-1.5">
+                <Label className="text-zinc-400 text-xs uppercase tracking-wider">Title</Label>
+                <Input id="edit-title" value={editTitle} onChange={e => setEditTitle(e.target.value)} required className="bg-zinc-800 border-zinc-700 text-zinc-100" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Input id="edit-description" value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+              <div className="space-y-1.5">
+                <Label className="text-zinc-400 text-xs uppercase tracking-wider">Description</Label>
+                <Input id="edit-description" value={editDesc} onChange={e => setEditDesc(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-dueDate">Due Date</Label>
-                  <Input id="edit-dueDate" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-xs uppercase tracking-wider">Due Date</Label>
+                  <Input id="edit-dueDate" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-estimatedMinutes">Est. Minutes</Label>
-                  <Input id="edit-estimatedMinutes" type="number" min="0" value={editMin} onChange={e => setEditMin(e.target.value)} />
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-xs uppercase tracking-wider">Est. Minutes</Label>
+                  <Input id="edit-estimatedMinutes" type="number" min="0" value={editMin} onChange={e => setEditMin(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-priority">Priority</Label>
+              <div className="space-y-1.5">
+                <Label className="text-zinc-400 text-xs uppercase tracking-wider">Priority</Label>
                 <Select value={editPriority} onValueChange={setEditPriority}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                  <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-100"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-zinc-800 border-zinc-700">
                     <SelectItem value="High">High</SelectItem>
                     <SelectItem value="Medium">Medium</SelectItem>
                     <SelectItem value="Low">Low</SelectItem>
@@ -323,12 +368,13 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
                 <Button type="button" variant="destructive" onClick={() => handleDelete(editTaskData.id, editTaskData.title)}>
                   <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </Button>
-                <Button type="submit">Save Changes</Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">Save Changes</Button>
               </DialogFooter>
             </form>
           )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

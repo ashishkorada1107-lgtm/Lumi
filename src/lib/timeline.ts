@@ -10,7 +10,7 @@ export type ScheduledTimelineItem = {
   end_time: string;
   location: string | null;
   type: 'class' | 'activity';
-  original: any;
+  original: Record<string, unknown>;
   start: string;
 };
 
@@ -66,7 +66,7 @@ export function generateTimeline(
     }
   }
 
-  let availableForRecommendation = [...priorityCandidates];
+  const availableForRecommendation = [...priorityCandidates];
   const recommendations = freePeriods.map(fp => {
     const recIndex = availableForRecommendation.findIndex(t => t.estimated_minutes && t.estimated_minutes <= fp.duration);
     let recommendedTask = null;
