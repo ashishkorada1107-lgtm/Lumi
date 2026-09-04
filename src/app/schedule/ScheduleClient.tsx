@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format, parseISO, addDays as addDaysFn, subDays } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addClass, editClass, deleteClass } from "@/app/actions";
-import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Calendar, CheckSquare } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Calendar, CheckSquare, Loader2 } from "lucide-react";
 import { generateTimeline } from "@/lib/timeline";
 import DailyTimeline from "@/components/DailyTimeline";
 
@@ -23,7 +23,6 @@ type Task = Database["public"]["Tables"]["tasks"]["Row"];
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 const DISPLAY_TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-
 
 function hasOverlap(
   newDays: string[], 
@@ -107,6 +106,23 @@ export default function ScheduleClient({
   weekEndStr: string,
 }) {
   const router = useRouter();
+  
+  const [isPending, startTransition] = useTransition();
+  const [optimisticClasses, setOptimisticClasses] = useOptimistic(
+    initialClasses,
+    (state, action: { type: string, payload: any }) => {
+      switch(action.type) {
+        case "add": return [...state, action.payload];
+        case "edit": return state.map(c => c.id === action.payload.id ? { ...c, ...action.payload.updates } : c);
+        case "delete": return state.filter(c => c.id !== action.payload);
+        default: return state;
+      }
+    }
+  );
+
+  const targetDayName = format(parseISO(targetDateStr), "EEEE");
+  const optimisticDailyClasses = optimisticClasses.filter(c => c.day_of_week.includes(targetDayName));
+
   const [view, setView] = useState<"daily" | "weekly">("daily");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editClassData, setEditClassData] = useState<ClassEvent | null>(null);
@@ -192,7 +208,7 @@ export default function ScheduleClient({
     if (!editStart || !editEnd) return setEditError("Start and end times are required.");
     if (editEnd <= editStart) return setEditError("End time must be after start time.");
 
-    const overlap = hasOverlap(editDays, editStart, editEnd, initialClasses, editClassData.id);
+    const overlap = hasOverlap(editDays, editStart, editEnd, optimisticClasses, editClassData.id);
     if (overlap) {
       const confirm = window.confirm(`This class overlaps with "${overlap.title}" (${overlap.start_time}-${overlap.end_time}). Do you want to save anyway?`);
       if (!confirm) return;
@@ -206,15 +222,40 @@ export default function ScheduleClient({
     formData.append("room", editRoom);
     formData.append("faculty", editFaculty);
 
-    await editClass(editClassData.id, formData);
-    setEditClassData(null);
+    const id = editClassData.id;
+    const updates = {
+      title: editTitle,
+      day_of_week: editDays.join(","),
+      start_time: editStart,
+      end_time: editEnd,
+      room: editRoom,
+      faculty: editFaculty,
+    };
+
+    startTransition(async () => {
+      setOptimisticClasses({ type: "edit", payload: { id, updates } });
+      setEditClassData(null);
+      try {
+        await editClass(id, formData);
+      } catch (err) {
+        console.error(err);
+      }
+    });
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!editClassData) return;
     if (window.confirm(`Are you sure you want to delete ${editClassData.title}?`)) {
-      await deleteClass(editClassData.id);
-      setEditClassData(null);
+      const id = editClassData.id;
+      startTransition(async () => {
+        setOptimisticClasses({ type: "delete", payload: id });
+        setEditClassData(null);
+        try {
+          await deleteClass(id);
+        } catch (err) {
+          console.error(err);
+        }
+      });
     }
   };
 
@@ -261,8 +302,8 @@ export default function ScheduleClient({
   }, [tasks, targetDateStr, actualTodayStr]);
 
   const allTimelineElements = useMemo(() => {
-    return generateTimeline(dailyClasses, activities, priorityCandidates);
-  }, [dailyClasses, activities, priorityCandidates]);
+    return generateTimeline(optimisticDailyClasses, activities, priorityCandidates);
+  }, [optimisticDailyClasses, activities, priorityCandidates]);
 
   const targetDateObj = parseISO(targetDateStr);
   const formattedDate = format(targetDateObj, 'EEEE, MMMM d, yyyy');
@@ -462,7 +503,7 @@ export default function ScheduleClient({
                     </div>
                     
                     {/* Overlay Classes */}
-                    {initialClasses.map((cls) => {
+                    {optimisticClasses.map((cls) => {
                       const days = cls.day_of_week.split(",");
                       const startHour = parseInt(cls.start_time.split(":")[0]);
                       const startMin = parseInt(cls.start_time.split(":")[1]);
@@ -476,7 +517,7 @@ export default function ScheduleClient({
                       const durationHours = (endHour + endMin / 60) - (startHour + startMin / 60);
                       const height = durationHours * slotHeight;
                       
-                      return days.map(day => {
+                      return days.map((day: string) => {
                         const dayIndex = DAYS.indexOf(day);
                         if (dayIndex === -1) return null;
                         

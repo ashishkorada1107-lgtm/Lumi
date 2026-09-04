@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useOptimistic, useTransition } from "react";
 import { format, isBefore, isToday, startOfDay } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,11 +11,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { addTask, editTask, deleteTask, toggleTaskCompletion } from "@/app/actions";
-import { Plus, CheckCircle2, Circle, Clock, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Plus, CheckCircle2, Circle, Clock, Calendar, Pencil, Trash2, Loader2 } from "lucide-react";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 
 export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
+  const [isPending, startTransition] = useTransition();
+
+  const [optimisticTasks, setOptimisticTasks] = useOptimistic(
+    initialTasks,
+    (state, action: { type: string, payload: any }) => {
+      switch (action.type) {
+        case "add":
+          return [...state, action.payload];
+        case "delete":
+          return state.filter(t => t.id !== action.payload);
+        case "toggle":
+          return state.map(t => t.id === action.payload.id ? { ...t, completed: action.payload.completed } : t);
+        case "edit":
+          return state.map(t => t.id === action.payload.id ? { ...t, ...action.payload.updates } : t);
+        default:
+          return state;
+      }
+    }
+  );
+
   const [filter, setFilter] = useState<"all" | "pending" | "completed" | "due_today" | "overdue">("all");
   const [priorityFilter, setPriorityFilter] = useState<"all" | "High" | "Medium" | "Low">("all");
   
@@ -78,8 +98,28 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
     formData.append("priority", addPriority);
     formData.append("estimatedMinutes", addMin);
 
-    await addTask(formData);
-    setIsAddOpen(false);
+    startTransition(async () => {
+      setOptimisticTasks({
+        type: "add", 
+        payload: {
+          id: Date.now(), // temporary ID
+          title: addTitle,
+          description: addDesc,
+          due_date: addDate || null,
+          priority: addPriority,
+          estimated_minutes: addMin ? parseInt(addMin) : 0,
+          completed: false,
+          user_id: "",
+          created_at: new Date().toISOString()
+        }
+      });
+      setIsAddOpen(false);
+      try {
+        await addTask(formData);
+      } catch (err) {
+        console.error(err);
+      }
+    });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -98,21 +138,51 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
     formData.append("priority", editPriority);
     formData.append("estimatedMinutes", editMin);
 
-    await editTask(editTaskData.id, formData);
-    setEditTaskData(null);
+    const id = editTaskData.id;
+    const updates = {
+      title: editTitle,
+      description: editDesc,
+      due_date: editDate || null,
+      priority: editPriority,
+      estimated_minutes: editMin ? parseInt(editMin) : 0,
+    };
+
+    startTransition(async () => {
+      setOptimisticTasks({ type: "edit", payload: { id, updates } });
+      setEditTaskData(null);
+      try {
+        await editTask(id, formData);
+      } catch (err) {
+        console.error(err);
+      }
+    });
   };
 
-  const handleDelete = async (id: number, title: string) => {
+  const handleDelete = (id: number, title: string) => {
     if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
-      await deleteTask(id);
-      if (editTaskData?.id === id) {
-        setEditTaskData(null);
-      }
+      startTransition(async () => {
+        setOptimisticTasks({ type: "delete", payload: id });
+        if (editTaskData?.id === id) {
+          setEditTaskData(null);
+        }
+        try {
+          await deleteTask(id);
+        } catch (err) {
+          console.error(err);
+        }
+      });
     }
   };
 
-  const handleToggle = async (id: number, completed: boolean) => {
-    await toggleTaskCompletion(id, !completed);
+  const handleToggle = (id: number, completed: boolean) => {
+    startTransition(async () => {
+      setOptimisticTasks({ type: "toggle", payload: { id, completed: !completed } });
+      try {
+        await toggleTaskCompletion(id, !completed);
+      } catch (err) {
+        console.error(err);
+      }
+    });
   };
 
   const todayStart = startOfDay(new Date());
@@ -131,7 +201,7 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
     return { badge: "Upcoming", variant: "secondary" as const, color: "text-zinc-600 dark:text-zinc-400" };
   };
 
-  let filteredTasks = initialTasks;
+  let filteredTasks = optimisticTasks;
 
   if (filter === "pending") {
     filteredTasks = filteredTasks.filter(t => !t.completed);

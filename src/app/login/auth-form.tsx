@@ -32,7 +32,7 @@ export default function AuthForm({ error, message }: { error?: string, message?:
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form action={isLogin ? login : signup} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
@@ -78,7 +78,7 @@ export default function AuthForm({ error, message }: { error?: string, message?:
             )}
 
             <div className="pt-2">
-              <Button formAction={isLogin ? login : signup} className="w-full">
+              <Button type="submit" className="w-full">
                 {isLogin ? "Log in" : "Sign up"}
               </Button>
             </div>

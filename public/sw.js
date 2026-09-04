@@ -34,7 +34,7 @@ self.addEventListener('notificationclick', function (event) {
   );
 });
 
-const CACHE_NAME = 'lumi-static-cache-v1';
+const CACHE_NAME = 'lumi-static-cache-v2';
 const STATIC_ASSETS = [
   '/icon-192.png',
   '/icon-512.png',

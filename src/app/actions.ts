@@ -5,8 +5,13 @@ import { createClient } from "@/lib/supabase/server"
 
 // --- TASKS ---
 export async function addTask(formData: FormData) {
+  const start = Date.now()
+  console.log(`[ACTION] addTask started at ${start}`)
+  
+  console.time("addTask_createClient")
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  console.timeEnd("addTask_createClient")
   if (!user) throw new Error("Unauthorized")
 
   const title = formData.get("title") as string
@@ -15,6 +20,7 @@ export async function addTask(formData: FormData) {
   const priority = formData.get("priority") as string
   const estimatedMinutes = parseInt(formData.get("estimatedMinutes") as string) || 0
 
+  console.time("addTask_supabaseInsert")
   await supabase.from("tasks").insert({
     user_id: user.id,
     title,
@@ -23,9 +29,13 @@ export async function addTask(formData: FormData) {
     priority,
     estimated_minutes: estimatedMinutes,
   })
+  console.timeEnd("addTask_supabaseInsert")
 
+  console.time("addTask_revalidate")
   revalidatePath("/tasks")
   revalidatePath("/")
+  console.timeEnd("addTask_revalidate")
+  console.log(`[ACTION] addTask finished in ${Date.now() - start}ms`)
 }
 
 export async function editTask(id: number, formData: FormData) {
@@ -49,25 +59,48 @@ export async function editTask(id: number, formData: FormData) {
 }
 
 export async function toggleTaskCompletion(id: number, completed: boolean) {
+  const start = Date.now()
+  console.log(`[ACTION] toggleTaskCompletion started at ${start}`)
+  console.time("toggleTaskCompletion_createClient")
   const supabase = await createClient()
+  console.timeEnd("toggleTaskCompletion_createClient")
+  
+  console.time("toggleTaskCompletion_supabaseUpdate")
   await supabase.from("tasks").update({ completed }).eq("id", id)
+  console.timeEnd("toggleTaskCompletion_supabaseUpdate")
+  
+  console.time("toggleTaskCompletion_revalidate")
   revalidatePath("/tasks")
   revalidatePath("/")
+  console.timeEnd("toggleTaskCompletion_revalidate")
+  console.log(`[ACTION] toggleTaskCompletion finished in ${Date.now() - start}ms`)
 }
 
 export async function deleteTask(id: number) {
+  const start = Date.now()
+  console.log(`[ACTION] deleteTask started at ${start}`)
   const supabase = await createClient()
+  
+  console.time("deleteTask_supabaseDelete")
   await supabase.from("tasks").delete().eq("id", id)
+  console.timeEnd("deleteTask_supabaseDelete")
+  
   revalidatePath("/tasks")
   revalidatePath("/")
+  console.log(`[ACTION] deleteTask finished in ${Date.now() - start}ms`)
 }
 
 // --- CLASSES ---
 export async function addClass(formData: FormData) {
+  const start = Date.now()
+  console.log(`[ACTION] addClass started at ${start}`)
+  console.time("addClass_createClient")
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  console.timeEnd("addClass_createClient")
   if (!user) throw new Error("Unauthorized")
 
+  console.time("addClass_supabaseInsert")
   const { error } = await supabase.from("classes").insert({
     user_id: user.id,
     title: formData.get("title") as string,
@@ -77,11 +110,15 @@ export async function addClass(formData: FormData) {
     room: formData.get("room") as string,
     faculty: formData.get("faculty") as string,
   })
+  console.timeEnd("addClass_supabaseInsert")
   if (error) {
     console.error("ADD CLASS ERROR:", error)
   }
+  console.time("addClass_revalidate")
   revalidatePath("/schedule")
   revalidatePath("/")
+  console.timeEnd("addClass_revalidate")
+  console.log(`[ACTION] addClass finished in ${Date.now() - start}ms`)
 }
 
 export async function editClass(id: number, formData: FormData) {
@@ -107,10 +144,15 @@ export async function deleteClass(id: number) {
 
 // --- ACTIVITIES ---
 export async function addActivity(formData: FormData) {
+  const start = Date.now()
+  console.log(`[ACTION] addActivity started at ${start}`)
+  console.time("addActivity_createClient")
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  console.timeEnd("addActivity_createClient")
   if (!user) throw new Error("Unauthorized")
 
+  console.time("addActivity_supabaseInsert")
   await supabase.from("activities").insert({
     user_id: user.id,
     title: formData.get("title") as string,
@@ -120,9 +162,14 @@ export async function addActivity(formData: FormData) {
     end_time: formData.get("end_time") as string,
     location: formData.get("location") as string,
   })
+  console.timeEnd("addActivity_supabaseInsert")
+  
+  console.time("addActivity_revalidate")
   revalidatePath("/activities")
   revalidatePath("/schedule")
   revalidatePath("/")
+  console.timeEnd("addActivity_revalidate")
+  console.log(`[ACTION] addActivity finished in ${Date.now() - start}ms`)
 }
 
 export async function editActivity(id: number, formData: FormData) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useOptimistic, useTransition } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,18 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editActivityData, setEditActivityData] = useState<Activity | null>(null);
 
+  const [optimisticActivities, setOptimisticActivities] = useOptimistic(
+    initialActivities,
+    (state, action: { type: string, payload: any }) => {
+      switch(action.type) {
+        case "add": return [...state, action.payload];
+        case "edit": return state.map(a => a.id === action.payload.id ? { ...a, ...action.payload.updates } : a);
+        case "delete": return state.filter(a => a.id !== action.payload);
+        default: return state;
+      }
+    }
+  );
+
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -109,8 +121,26 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
             </DialogHeader>
             <form
               action={async (formData) => {
-                await addActivity(formData);
+                const tempId = Date.now();
+                setOptimisticActivities({ 
+                  type: "add", 
+                  payload: { 
+                    id: tempId, 
+                    title: formData.get("title") as string,
+                    type: formData.get("type") as string,
+                    date: formData.get("date") as string,
+                    start_time: formData.get("start_time") as string,
+                    end_time: formData.get("end_time") as string,
+                    location: formData.get("location") as string,
+                    user_id: "temp"
+                  } 
+                });
                 setIsAddOpen(false);
+                try {
+                  await addActivity(formData);
+                } catch (err) {
+                  console.error(err);
+                }
               }}
               className="space-y-4"
             >
@@ -161,7 +191,7 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
         </Dialog>
       </div>
 
-      {initialActivities.length === 0 ? (
+      {optimisticActivities.length === 0 ? (
         <div className="py-16 text-center border border-dashed border-zinc-800 rounded-xl">
           <ActivityIcon className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-zinc-300 mb-1">No activities yet</h3>
@@ -175,7 +205,7 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {initialActivities.map((activity) => {
+          {optimisticActivities.map((activity) => {
             const config = TYPE_CONFIG[activity.type] || TYPE_CONFIG.Other;
             const Icon = config.icon;
 
@@ -227,7 +257,14 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
-                          <form action={async () => await deleteActivity(activity.id)}>
+                          <form action={async () => {
+                            setOptimisticActivities({ type: "delete", payload: activity.id });
+                            try {
+                              await deleteActivity(activity.id);
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          }}>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -280,8 +317,27 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
           {editActivityData && (
             <form
               action={async (formData) => {
-                await editActivity(editActivityData.id, formData);
+                const id = editActivityData.id;
+                setOptimisticActivities({
+                  type: "edit",
+                  payload: {
+                    id,
+                    updates: {
+                      title: formData.get("title") as string,
+                      type: formData.get("type") as string,
+                      date: formData.get("date") as string,
+                      start_time: formData.get("start_time") as string,
+                      end_time: formData.get("end_time") as string,
+                      location: formData.get("location") as string,
+                    }
+                  }
+                });
                 setEditActivityData(null);
+                try {
+                  await editActivity(id, formData);
+                } catch (err) {
+                  console.error(err);
+                }
               }}
               className="space-y-4"
             >
