@@ -15,6 +15,7 @@ import { addClass, editClass, deleteClass } from "@/app/actions";
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Calendar, CheckSquare, Loader2 } from "lucide-react";
 import { generateTimeline } from "@/lib/timeline";
 import DailyTimeline from "@/components/DailyTimeline";
+import { cn } from "@/lib/utils";
 
 type ClassEvent = Database["public"]["Tables"]["classes"]["Row"];
 type ActivityEvent = Database["public"]["Tables"]["activities"]["Row"];
@@ -23,6 +24,41 @@ type Task = Database["public"]["Tables"]["tasks"]["Row"];
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 const DISPLAY_TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+
+function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (!touchStartX.current || !touchStartY.current) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const dx = touchStartX.current - touchEndX;
+    const dy = touchStartY.current - touchEndY;
+
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      if (dx > 0) onSwipeLeft();
+      else onSwipeRight();
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  return { onTouchStart, onTouchMove, onTouchEnd };
+}
 
 function hasOverlap(
   newDays: string[], 
@@ -124,8 +160,13 @@ export default function ScheduleClient({
   const optimisticDailyClasses = optimisticClasses.filter(c => c.day_of_week.includes(targetDayName));
 
   const [view, setView] = useState<"daily" | "weekly">("daily");
+  const [mobileSelectedDate, setMobileSelectedDate] = useState(targetDateStr);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editClassData, setEditClassData] = useState<ClassEvent | null>(null);
+
+  useEffect(() => {
+    setMobileSelectedDate(targetDateStr);
+  }, [targetDateStr]);
 
   // Form State for Add
   const [addTitle, setAddTitle] = useState("");
@@ -301,10 +342,43 @@ export default function ScheduleClient({
     });
   }, [tasks, targetDateStr, actualTodayStr]);
 
-  const allTimelineElements = useMemo(() => {
-    return generateTimeline(optimisticDailyClasses, activities, priorityCandidates);
-  }, [optimisticDailyClasses, activities, priorityCandidates]);
+  const dailyActivities = useMemo(() => {
+    return activities.filter(a => a.date === targetDateStr);
+  }, [activities, targetDateStr]);
 
+  const allTimelineElements = useMemo(() => {
+    return generateTimeline(optimisticDailyClasses, dailyActivities, priorityCandidates);
+  }, [optimisticDailyClasses, dailyActivities, priorityCandidates]);
+
+  // Data for mobile weekly view
+  const mobileWeeklyClasses = useMemo(() => {
+    const dayOfWeek = format(parseISO(mobileSelectedDate), "EEEE");
+    return optimisticClasses
+      .filter((c) => c.day_of_week.toLowerCase().includes(dayOfWeek.toLowerCase()))
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  }, [optimisticClasses, mobileSelectedDate]);
+
+  const mobileWeeklyActivities = useMemo(() => {
+    return activities.filter(a => a.date === mobileSelectedDate);
+  }, [activities, mobileSelectedDate]);
+
+  const mobileWeeklyPriorityCandidates = useMemo(() => {
+    return tasks.filter(t => !t.completed && (
+      (t.due_date && t.due_date < actualTodayStr) ||
+      (t.due_date === mobileSelectedDate) ||
+      (t.priority === 'High')
+    )).sort((a, b) => {
+      if (a.priority === 'High' && b.priority !== 'High') return -1;
+      if (b.priority === 'High' && a.priority !== 'High') return 1;
+      if (a.priority === 'Medium' && b.priority === 'Low') return -1;
+      if (b.priority === 'Medium' && a.priority === 'Low') return 1;
+      return (a.due_date || '') < (b.due_date || '') ? -1 : 1;
+    });
+  }, [tasks, mobileSelectedDate, actualTodayStr]);
+
+  const mobileWeeklyTimelineElements = useMemo(() => {
+    return generateTimeline(mobileWeeklyClasses, mobileWeeklyActivities, mobileWeeklyPriorityCandidates);
+  }, [mobileWeeklyClasses, mobileWeeklyActivities, mobileWeeklyPriorityCandidates]);
   const targetDateObj = parseISO(targetDateStr);
   const formattedDate = format(targetDateObj, 'EEEE, MMMM d, yyyy');
   const isActualToday = targetDateStr === actualTodayStr;
@@ -327,6 +401,29 @@ export default function ScheduleClient({
       return format(d, "yyyy-MM-dd");
     });
   }, [weekStartStr]);
+
+  const mobileSwipe = useSwipe(
+    () => {
+      // swipe left (next day)
+      const currentIdx = weekDates.indexOf(mobileSelectedDate);
+      if (currentIdx === -1 || currentIdx === 6) {
+        const d = parseISO(mobileSelectedDate);
+        router.push(`/schedule?date=${format(addDaysFn(d, 1), 'yyyy-MM-dd')}`);
+      } else {
+        setMobileSelectedDate(weekDates[currentIdx + 1]);
+      }
+    },
+    () => {
+      // swipe right (prev day)
+      const currentIdx = weekDates.indexOf(mobileSelectedDate);
+      if (currentIdx === -1 || currentIdx === 0) {
+        const d = parseISO(mobileSelectedDate);
+        router.push(`/schedule?date=${format(subDays(d, 1), 'yyyy-MM-dd')}`);
+      } else {
+        setMobileSelectedDate(weekDates[currentIdx - 1]);
+      }
+    }
+  );
 
   // Filter tasks whose due_date falls within the selected week
   const tasksForWeek = useMemo(() => {
@@ -351,21 +448,21 @@ export default function ScheduleClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-3 mb-2 lg:mb-0 px-2 lg:px-0">
         <div>
-          <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-1">Manage</p>
-          <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">Schedule</h1>
+          <h1 className="text-3xl lg:text-2xl font-bold text-zinc-50 tracking-tight">Schedule</h1>
+          <p className="text-sm lg:text-xs font-medium text-zinc-400 lg:uppercase lg:tracking-widest mt-1">Manage</p>
         </div>
-        <div className="inline-flex items-center rounded-full bg-zinc-800/80 p-0.5 gap-0.5">
+        <div className="inline-flex items-center rounded-full bg-zinc-800/80 p-1 lg:p-0.5 gap-1 lg:gap-0.5 self-start sm:self-auto">
           <button
             onClick={() => setView('daily')}
-            className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-150 ${view === 'daily' ? 'bg-zinc-600 text-zinc-50 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-6 py-2.5 lg:px-4 lg:py-1.5 text-sm lg:text-xs font-medium rounded-full transition-all duration-150 ${view === 'daily' ? 'bg-zinc-600 text-zinc-50 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Daily
           </button>
           <button
             onClick={() => setView('weekly')}
-            className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-150 ${view === 'weekly' ? 'bg-zinc-600 text-zinc-50 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-6 py-2.5 lg:px-4 lg:py-1.5 text-sm lg:text-xs font-medium rounded-full transition-all duration-150 ${view === 'weekly' ? 'bg-zinc-600 text-zinc-50 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Weekly
           </button>
@@ -384,15 +481,15 @@ export default function ScheduleClient({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800" onClick={() => navDate(-1)}>
-                  <ChevronLeft className="w-4 h-4" />
+              <div className="flex items-center gap-1 lg:gap-1 bg-zinc-900/60 lg:bg-transparent p-1 lg:p-0 rounded-full lg:rounded-none border border-zinc-800/80 lg:border-transparent">
+                <Button variant="ghost" size="icon" className="h-10 w-10 lg:h-7 lg:w-7 rounded-full lg:rounded-md text-zinc-400 hover:text-zinc-100 lg:text-zinc-500 hover:bg-zinc-800/60 lg:hover:bg-zinc-800" onClick={() => navDate(-1)}>
+                  <ChevronLeft className="w-5 h-5 lg:w-4 lg:h-4" />
                 </Button>
                 {!isActualToday && (
-                  <Button variant="ghost" size="sm" className="h-7 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800" onClick={navToday}>Today</Button>
+                  <Button variant="ghost" size="sm" className="h-10 lg:h-7 px-4 lg:px-3 rounded-full lg:rounded-md text-sm lg:text-xs font-medium text-zinc-300 hover:text-zinc-100 lg:text-zinc-400 hover:bg-zinc-800/60 lg:hover:bg-zinc-800" onClick={navToday}>Today</Button>
                 )}
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800" onClick={() => navDate(1)}>
-                  <ChevronRight className="w-4 h-4" />
+                <Button variant="ghost" size="icon" className="h-10 w-10 lg:h-7 lg:w-7 rounded-full lg:rounded-md text-zinc-400 hover:text-zinc-100 lg:text-zinc-500 hover:bg-zinc-800/60 lg:hover:bg-zinc-800" onClick={() => navDate(1)}>
+                  <ChevronRight className="w-5 h-5 lg:w-4 lg:h-4" />
                 </Button>
               </div>
             </div>
@@ -462,7 +559,7 @@ export default function ScheduleClient({
                 </Dialog>
               </div>
 
-            <Card className="overflow-hidden bg-zinc-900/40 border-zinc-800/80 rounded-xl">
+            <Card className="hidden md:block overflow-hidden bg-zinc-900/40 border-zinc-800/80 rounded-xl">
               <div className="overflow-x-auto">
                 <div className="min-w-[800px] w-full">
                   {/* Header — shows day abbreviation + actual date */}
@@ -588,6 +685,67 @@ export default function ScheduleClient({
               </div>
             </Card>
 
+            {/* Mobile Weekly View */}
+            <div 
+              className="md:hidden space-y-4"
+              onTouchStart={mobileSwipe.onTouchStart}
+              onTouchMove={mobileSwipe.onTouchMove}
+              onTouchEnd={mobileSwipe.onTouchEnd}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col">
+                  <span className="text-xl font-bold tracking-tight text-zinc-50">
+                    {format(parseISO(weekStartStr), "MMM d")} &ndash; {format(parseISO(weekEndStr), "MMM d, yyyy")}
+                  </span>
+                  {mobileSelectedDate === actualTodayStr && (
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-indigo-400 mt-1">
+                      Today
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 bg-zinc-900/60 p-1 rounded-full border border-zinc-800/80">
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60" onClick={() => router.push(`/schedule?date=${format(subDays(parseISO(weekStartStr), 7), 'yyyy-MM-dd')}`)}>
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                  {!weekDates.includes(actualTodayStr) && (
+                    <Button variant="ghost" size="sm" className="h-10 px-4 rounded-full text-sm font-medium text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/60" onClick={navToday}>Today</Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60" onClick={() => router.push(`/schedule?date=${format(addDaysFn(parseISO(weekStartStr), 7), 'yyyy-MM-dd')}`)}>
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                {weekDates.map((dateStr, i) => {
+                  const isToday = dateStr === actualTodayStr;
+                  const isSelected = dateStr === mobileSelectedDate;
+                  const dayName = DAYS[i].slice(0, 3);
+                  return (
+                    <button
+                      key={dateStr}
+                      onClick={() => setMobileSelectedDate(dateStr)}
+                      className={cn(
+                        "flex flex-col items-center justify-center w-[13%] aspect-[2.5/4] sm:aspect-[3/4] rounded-2xl transition-all duration-200",
+                        isSelected ? "bg-indigo-600 text-white shadow-md scale-105" : (isToday ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/20" : "text-zinc-500 hover:bg-zinc-800/60")
+                      )}
+                    >
+                      <span className={cn("text-[10px] sm:text-xs font-semibold tracking-wider uppercase mb-1", isSelected ? "text-indigo-200" : "")}>{dayName}</span>
+                      <span className="text-base sm:text-lg font-bold">{format(parseISO(dateStr), "d")}</span>
+                      {isToday && !isSelected && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="px-1">
+                <DailyTimeline 
+                  allTimelineElements={mobileWeeklyTimelineElements} 
+                  emptyMessage="Nothing scheduled for this date." 
+                  viewingDateStr={mobileSelectedDate}
+                />
+              </div>
+            </div>
 
             {/* Edit Dialog */}
             <Dialog open={!!editClassData} onOpenChange={(o) => !o && setEditClassData(null)}>

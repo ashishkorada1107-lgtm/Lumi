@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, LayoutDashboard, CheckSquare, Activity, Settings } from "lucide-react";
+import { Calendar, LayoutDashboard, CheckSquare, Settings, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { name: "Today", href: "/", icon: LayoutDashboard },
   { name: "Schedule", href: "/schedule", icon: Calendar },
   { name: "Tasks", href: "/tasks", icon: CheckSquare },
-  { name: "Activities", href: "/activities", icon: Activity },
+  { name: "Focus", href: "/focus", icon: Timer },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -22,7 +22,7 @@ export function Navigation() {
       <div className="hidden md:flex h-full flex-col px-3 py-5 border-r border-zinc-800/60 bg-zinc-950">
         <Link href="/" className="mb-7 flex items-center px-3">
           <span className="text-[15px] font-semibold tracking-[0.08em] text-zinc-100 select-none">
-            lumi
+            dailyflow
           </span>
         </Link>
         <nav className="flex flex-col gap-0.5 flex-1">

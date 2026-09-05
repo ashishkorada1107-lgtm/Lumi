@@ -27,8 +27,9 @@ export default async function TodayPage(props: { searchParams: Promise<{ date?: 
   ] = await Promise.all([
     supabase.from("classes").select("*").ilike("day_of_week", `%${targetDayOfWeek}%`).order("start_time", { ascending: true }),
     supabase.from("activities").select("*").eq("date", targetDateStr).order("start_time", { ascending: true }),
-    // Fetch all tasks for client-side processing since we need pending, completed for today, and high-priority upcoming
-    supabase.from("tasks").select("*"),
+    supabase.from("tasks")
+      .select("*")
+      .or(`due_date.eq.${targetDateStr},and(completed.eq.false,due_date.lt.${targetDateStr})`),
     user ? supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null })
   ]);
 

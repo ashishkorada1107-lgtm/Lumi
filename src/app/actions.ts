@@ -72,6 +72,7 @@ export async function toggleTaskCompletion(id: number, completed: boolean) {
   console.time("toggleTaskCompletion_revalidate")
   revalidatePath("/tasks")
   revalidatePath("/")
+  revalidatePath("/focus")
   console.timeEnd("toggleTaskCompletion_revalidate")
   console.log(`[ACTION] toggleTaskCompletion finished in ${Date.now() - start}ms`)
 }
@@ -165,7 +166,7 @@ export async function addActivity(formData: FormData) {
   console.timeEnd("addActivity_supabaseInsert")
   
   console.time("addActivity_revalidate")
-  revalidatePath("/activities")
+  revalidatePath("/tasks")
   revalidatePath("/schedule")
   revalidatePath("/")
   console.timeEnd("addActivity_revalidate")
@@ -182,7 +183,7 @@ export async function editActivity(id: number, formData: FormData) {
     end_time: formData.get("end_time") as string,
     location: formData.get("location") as string,
   }).eq("id", id)
-  revalidatePath("/activities")
+  revalidatePath("/tasks")
   revalidatePath("/schedule")
   revalidatePath("/")
 }
@@ -190,7 +191,7 @@ export async function editActivity(id: number, formData: FormData) {
 export async function deleteActivity(id: number) {
   const supabase = await createClient()
   await supabase.from("activities").delete().eq("id", id)
-  revalidatePath("/activities")
+  revalidatePath("/tasks")
   revalidatePath("/schedule")
   revalidatePath("/")
 }

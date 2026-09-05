@@ -226,18 +226,18 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-1">Preferences</p>
-        <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">Settings</h1>
+    <div className="max-w-3xl mx-auto space-y-8 md:space-y-6">
+      <div className="px-1 md:px-0">
+        <p className="text-[11px] md:text-xs font-semibold md:font-medium text-zinc-500 uppercase tracking-[0.18em] md:tracking-widest mb-2 md:mb-1">Preferences</p>
+        <h1 className="text-3xl md:text-2xl font-bold md:font-semibold text-zinc-50 md:text-zinc-100 tracking-tight leading-none md:leading-normal">Settings</h1>
       </div>
 
-      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium text-zinc-100">Profile</CardTitle>
-          <CardDescription className="text-xs text-zinc-500">Manage your public profile details.</CardDescription>
+      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl md:rounded-xl">
+        <CardHeader className="px-5 pt-5 pb-4 md:px-6 md:pt-6 md:pb-3">
+          <CardTitle className="text-lg md:text-base font-semibold md:font-medium text-zinc-100">Profile</CardTitle>
+          <CardDescription className="text-sm md:text-xs text-zinc-500">Manage your public profile details.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="px-5 pb-5 md:px-6 md:pb-6 space-y-5 md:space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="displayName" className="text-xs font-medium uppercase tracking-wider text-zinc-400">Name</Label>
             <Input 
@@ -245,77 +245,79 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
               value={displayName} 
               onChange={(e) => setDisplayName(e.target.value)} 
               placeholder="Your Name"
-              className="bg-zinc-800/80 border-zinc-700/60 text-zinc-100 focus:border-indigo-500"
+              className="h-11 md:h-9 bg-zinc-800/80 border-zinc-700/60 text-zinc-100 focus:border-indigo-500"
             />
           </div>
           
           <div className="space-y-1.5">
             <Label className="text-xs font-medium uppercase tracking-wider text-zinc-400">Email</Label>
-            <div className="text-sm px-3 py-2 border border-zinc-800 rounded-md bg-zinc-800/40 text-zinc-400">
+            <div className="flex min-h-11 md:min-h-0 items-center text-sm px-3 py-2 border border-zinc-800 rounded-lg md:rounded-md bg-zinc-800/40 text-zinc-400 break-all">
               {userEmail}
             </div>
           </div>
 
           {profileMessage && (
-            <div className={`p-2.5 rounded-md text-sm font-medium ${profileMessage.type === 'error' ? 'bg-red-950/40 text-red-400 border border-red-800/40' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'}`}>
+            <div className={`p-3 rounded-lg md:rounded-md text-sm font-medium ${profileMessage.type === 'error' ? 'bg-red-950/40 text-red-400 border border-red-800/40' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'}`}>
               {profileMessage.text}
             </div>
           )}
 
-          <Button onClick={handleSaveProfile} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none">
+          <Button onClick={handleSaveProfile} className="w-full h-11 md:h-9 rounded-xl md:rounded-md bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none">
             Save changes
           </Button>
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium text-zinc-100">Account</CardTitle>
-          <CardDescription className="text-xs text-zinc-500">Manage your Lumi session.</CardDescription>
+      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl md:rounded-xl">
+        <CardHeader className="px-5 pt-5 pb-4 md:px-6 md:pt-6 md:pb-3">
+          <CardTitle className="text-lg md:text-base font-semibold md:font-medium text-zinc-100">Account</CardTitle>
+          <CardDescription className="text-sm md:text-xs text-zinc-500">Manage your DailyFlow session.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-5 pb-5 md:px-6 md:pb-6">
           <Button variant="outline" onClick={() => {
             localStorage.removeItem("lumi_device_id");
             logout();
-          }} className="w-full border-zinc-700/60 text-zinc-300 hover:text-white hover:bg-zinc-800/60">
+          }} className="w-full h-11 md:h-9 rounded-xl md:rounded-md border-red-900/50 bg-red-950/20 text-red-300 hover:text-red-200 hover:bg-red-950/40 md:border-zinc-700/60 md:bg-zinc-950 md:text-zinc-300 md:hover:text-white md:hover:bg-zinc-800/60">
             Log out
           </Button>
         </CardContent>
       </Card>
       
-      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium text-zinc-100">Notifications</CardTitle>
-          <CardDescription className="text-xs text-zinc-500">Configure your daily morning briefing.</CardDescription>
+      <Card className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl md:rounded-xl">
+        <CardHeader className="px-5 pt-5 pb-4 md:px-6 md:pt-6 md:pb-3">
+          <CardTitle className="text-lg md:text-base font-semibold md:font-medium text-zinc-100">Notifications</CardTitle>
+          <CardDescription className="text-sm md:text-xs text-zinc-500">Configure your daily morning briefing.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-5">
+        <CardContent className="px-5 pb-5 md:px-6 md:pb-6 space-y-6 md:space-y-5">
           {errorMsg && (
-            <div className="bg-red-950/30 text-red-400 border border-red-800/40 p-3 rounded-lg text-sm font-medium">
+            <div className="bg-red-950/30 text-red-400 border border-red-800/40 p-3 rounded-xl md:rounded-lg text-sm font-medium">
               {errorMsg}
             </div>
           )}
           
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
+          <div className="flex min-h-11 items-center justify-between gap-4">
+            <div className="space-y-1">
               <Label className="text-sm text-zinc-200">Enable Morning Briefing</Label>
-              <p className="text-xs text-zinc-500">
+              <p className="text-sm md:text-xs text-zinc-500 leading-relaxed">
                 Receive a push notification every morning with your day at a glance.
               </p>
               <p className="text-[11px] font-medium text-zinc-400 mt-1">
                 Status: {subStatus}
               </p>
             </div>
-            <Switch
-              checked={briefingEnabled}
-              onCheckedChange={handleToggle}
-              disabled={!isSupported || permissionState === "denied"}
-            />
+            <div className="flex min-h-11 min-w-11 shrink-0 items-center justify-end">
+              <Switch
+                checked={briefingEnabled}
+                onCheckedChange={handleToggle}
+                disabled={!isSupported || permissionState === "denied"}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
+          <div className="flex min-h-11 items-center justify-between gap-4">
+            <div className="space-y-1">
               <Label className="text-sm text-zinc-200">Morning briefing time</Label>
-              <p className="text-xs text-zinc-500">
+              <p className="text-sm md:text-xs text-zinc-500 leading-relaxed">
                 The time you&apos;ll receive your notification.
               </p>
               <p className="text-[11px] font-medium text-zinc-400 mt-1">
@@ -326,12 +328,12 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
               type="time" 
               value={briefingTime} 
               onChange={handleTimeChange} 
-              className="w-32 bg-zinc-800/80 border-zinc-700/60 text-zinc-100"
+              className="h-11 md:h-9 w-32 shrink-0 bg-zinc-800/80 border-zinc-700/60 text-zinc-100"
             />
           </div>
 
-          <div className="pt-4 border-t border-zinc-800/80">
-            <Button variant="outline" onClick={handleTest} disabled={!briefingEnabled} className="border-zinc-700/60 text-zinc-300 hover:text-white hover:bg-zinc-800/60">
+          <div className="pt-5 md:pt-4 border-t border-zinc-800/80">
+            <Button variant="outline" onClick={handleTest} disabled={!briefingEnabled} className="h-11 md:h-9 w-full sm:w-auto rounded-xl md:rounded-md border-zinc-700/60 text-zinc-300 hover:text-white hover:bg-zinc-800/60">
               Send Test Notification
             </Button>
             <p className="text-[11px] text-zinc-500 mt-2">
@@ -341,11 +343,11 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
         </CardContent>
       </Card>
       
-      <Card className="bg-zinc-900/20 border border-zinc-800/50 rounded-xl">
-        <CardHeader className="pb-3">
+      <Card className="bg-zinc-900/20 border border-zinc-800/50 rounded-2xl md:rounded-xl">
+        <CardHeader className="px-5 pt-5 pb-4 md:px-6 md:pt-6 md:pb-3">
           <CardTitle className="text-sm font-medium text-zinc-400">Important Deployment Note</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-5 pb-5 md:px-6 md:pb-6">
           <p className="text-xs text-zinc-500 leading-relaxed mb-3">
             Push notifications are enabled using the standard Web Push API. To receive notifications <strong>automatically every morning without the app being open</strong>, a backend Cron Job is required.
           </p>

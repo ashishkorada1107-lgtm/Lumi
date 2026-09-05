@@ -1,6 +1,6 @@
 {
-  "name": "Lumi",
-  "short_name": "Lumi",
+  "name": "DailyFlow",
+  "short_name": "DailyFlow",
   "description": "Personal schedule, tasks, activities and daily companion",
   "start_url": "/",
   "scope": "/",

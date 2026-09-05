@@ -79,7 +79,7 @@ export default function MiniTimeline({
         <div className="flex items-center gap-2 mb-3 px-1">
           <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           <span className="text-xs font-semibold text-red-400">
-            Now · {format12Hour(format(currentTime!, "HH:mm"))}
+            Now \u00B7 {format12Hour(format(currentTime!, "HH:mm"))}
           </span>
         </div>
       )}
@@ -99,7 +99,7 @@ export default function MiniTimeline({
             <div
               key={`fp-${idx}`}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg border border-dashed transition-opacity",
+                "flex items-center gap-3 px-4 lg:px-3 py-3 lg:py-2 rounded-2xl lg:rounded-lg border border-dashed transition-opacity",
                 isCurrent
                   ? "border-emerald-500/40 bg-emerald-950/20"
                   : "border-zinc-800 bg-zinc-900/30",
@@ -125,7 +125,7 @@ export default function MiniTimeline({
           <div
             key={item.id}
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg border transition-all",
+              "flex items-center gap-3 px-4 lg:px-3 py-3 lg:py-2 rounded-2xl lg:rounded-lg border transition-all",
               isCurrent
                 ? isClass
                   ? "border-indigo-500/50 bg-indigo-950/30 ring-1 ring-indigo-500/20"

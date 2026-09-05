@@ -102,16 +102,16 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-3 px-4 lg:px-0">
+        <div className="hidden lg:block">
           <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-1">Manage</p>
           <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">Activities</h1>
         </div>
 
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none">
-              <Plus className="w-4 h-4 mr-1.5" />
+            <Button size="sm" className="w-full lg:w-auto h-12 lg:h-9 bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none rounded-xl lg:rounded-md text-base lg:text-sm font-medium">
+              <Plus className="w-5 h-5 lg:w-4 lg:h-4 mr-2 lg:mr-1.5" />
               Add Activity
             </Button>
           </DialogTrigger>
@@ -183,8 +183,8 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
                 <Label htmlFor="location" className="text-zinc-400 text-xs uppercase tracking-wider">Location</Label>
                 <Input id="location" name="location" className="bg-zinc-800 border-zinc-700 text-zinc-100" />
               </div>
-              <DialogFooter>
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">Save Activity</Button>
+              <DialogFooter className="pt-2">
+                <Button type="submit" className="w-full h-12 lg:h-9 bg-indigo-600 hover:bg-indigo-700 text-white border-0 rounded-xl lg:rounded-md text-base lg:text-sm font-medium">Save Activity</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -213,7 +213,7 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
               <Card
                 key={activity.id}
                 className={cn(
-                  "group overflow-hidden border-l-2 bg-zinc-900/40 border border-zinc-800/60 transition-all hover:bg-zinc-800/40 hover:border-zinc-700/60",
+                  "group overflow-hidden rounded-2xl lg:rounded-xl border-l-4 lg:border-l-2 bg-zinc-900/40 border border-zinc-800/60 transition-all hover:bg-zinc-800/40 hover:border-zinc-700/60",
                   config.border
                 )}
               >
@@ -233,13 +233,13 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 p-3.5 min-w-0">
+                    <div className="flex-1 p-4 lg:p-3.5 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-medium text-sm text-zinc-100 truncate">{activity.title}</p>
+                          <p className="font-medium text-base lg:text-sm text-zinc-100 truncate">{activity.title}</p>
                           <span
                             className={cn(
-                              "inline-block mt-1 text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border",
+                              "inline-block mt-1 text-[10px] lg:text-[9px] font-semibold uppercase tracking-wider px-2 py-1 lg:px-1.5 lg:py-0.5 rounded-md lg:rounded border",
                               config.color,
                               config.border,
                               config.bg
@@ -248,14 +248,14 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
                             {activity.type}
                           </span>
                         </div>
-                        <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1 lg:gap-0.5 shrink-0 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-zinc-500 hover:text-zinc-200"
+                            className="h-10 w-10 lg:h-7 lg:w-7 rounded-full lg:rounded-md text-zinc-400 lg:text-zinc-500 hover:text-zinc-200"
                             onClick={() => setEditActivityData(activity)}
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <Pencil className="w-5 h-5 lg:w-3.5 lg:h-3.5" />
                           </Button>
                           <form action={async () => {
                             setOptimisticActivities({ type: "delete", payload: activity.id });
@@ -269,9 +269,9 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
                               variant="ghost"
                               size="icon"
                               type="submit"
-                              className="h-7 w-7 text-zinc-500 hover:text-red-400"
+                              className="h-10 w-10 lg:h-7 lg:w-7 rounded-full lg:rounded-md text-zinc-400 lg:text-zinc-500 hover:text-red-400"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-5 h-5 lg:w-3.5 lg:h-3.5" />
                             </Button>
                           </form>
                         </div>
@@ -380,8 +380,8 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
                 <Label htmlFor="edit-location" className="text-zinc-400 text-xs uppercase tracking-wider">Location</Label>
                 <Input id="edit-location" name="location" defaultValue={editActivityData.location || ""} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
               </div>
-              <DialogFooter>
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">Save Changes</Button>
+              <DialogFooter className="pt-2">
+                <Button type="submit" className="w-full h-12 lg:h-9 bg-indigo-600 hover:bg-indigo-700 text-white border-0 rounded-xl lg:rounded-md text-base lg:text-sm font-medium">Save Changes</Button>
               </DialogFooter>
             </form>
           )}

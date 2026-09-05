@@ -18,7 +18,7 @@ self.addEventListener('push', function (event) {
     } catch (e) {
       // Fallback if not JSON
       event.waitUntil(
-        self.registration.showNotification('Lumi', {
+        self.registration.showNotification('DailyFlow', {
           body: event.data.text(),
           icon: '/icon-192.png'
         })
@@ -34,7 +34,7 @@ self.addEventListener('notificationclick', function (event) {
   );
 });
 
-const CACHE_NAME = 'lumi-static-cache-v2';
+const CACHE_NAME = 'dailyflow-static-cache-v1';
 const STATIC_ASSETS = [
   '/icon-192.png',
   '/icon-512.png',
@@ -64,9 +64,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
+  const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+
   // Only cache GET requests for static assets or Next.js static chunks
+  // DO NOT cache Next.js chunks during localhost development to prevent stale HMR!
   if (event.request.method === 'GET' && (
-    url.pathname.startsWith('/_next/static/') ||
+    (!isLocalhost && url.pathname.startsWith('/_next/static/')) ||
     STATIC_ASSETS.includes(url.pathname)
   )) {
     event.respondWith(

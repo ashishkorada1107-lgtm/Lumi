@@ -20,20 +20,24 @@ export default async function SchedulePage(props: { searchParams: Promise<{ date
 
   const [
     { data: allClasses, error: allClassesError },
-    { data: dailyClasses, error: dailyClassesError },
     { data: activities, error: activitiesError },
     { data: tasks, error: tasksError }
   ] = await Promise.all([
     supabase.from("classes").select("*"), // For weekly timetable
-    supabase.from("classes").select("*").ilike("day_of_week", `%${targetDayOfWeek}%`).order("start_time", { ascending: true }),
-    supabase.from("activities").select("*").eq("date", targetDateStr).order("start_time", { ascending: true }),
-    supabase.from("tasks").select("*"),
+    supabase.from("activities").select("*").gte("date", weekStartStr).lte("date", weekEndStr).order("start_time", { ascending: true }),
+    supabase.from("tasks")
+      .select("*")
+      .or(`and(due_date.gte.${weekStartStr},due_date.lte.${weekEndStr}),and(completed.eq.false,due_date.lt.${format(actualTodayObj, "yyyy-MM-dd")})`),
   ]);
 
   if (allClassesError) console.error("Error fetching all classes:", allClassesError);
-  if (dailyClassesError) console.error("Error fetching daily classes:", dailyClassesError);
   if (activitiesError) console.error("Error fetching activities:", activitiesError);
   if (tasksError) console.error("Error fetching tasks:", tasksError);
+
+  const dailyClasses = (allClasses || [])
+    .filter((c) => c.day_of_week.toLowerCase().includes(targetDayOfWeek.toLowerCase()))
+    .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
 
   const actualTodayStr = format(actualTodayObj, "yyyy-MM-dd");
 

@@ -3,18 +3,19 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navigation";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { GlobalSwipe } from "@/components/GlobalSwipe";
 
 const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Lumi — Personal Scheduling",
-  description: "Personal schedule, tasks, activities and daily companion",
+  title: "DailyFlow — Personal Scheduling",
+  description: "Personal schedule, tasks, activities and daily companion.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Lumi"
-  }
+    title: "DailyFlow"
+  },
 };
 
 export const viewport = {
@@ -34,9 +35,13 @@ export default function RootLayout({
           <div className="w-full flex-none md:w-56">
             <Navigation />
           </div>
-          <div className="flex-grow p-4 md:p-7 overflow-y-auto w-full pb-24 md:pb-7">
-            {children}
-          </div>
+          <GlobalSwipe>
+            <div className="flex-grow md:p-7 overflow-y-auto overflow-x-hidden w-full h-full pb-24 md:pb-7">
+              <div className="p-4 md:p-0 min-h-full">
+                {children}
+              </div>
+            </div>
+          </GlobalSwipe>
         </div>
       </body>
     </html>

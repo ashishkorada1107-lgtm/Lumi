@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -24,11 +24,13 @@ type ItemState = 'current' | 'finished' | 'upcoming';
 export default function DailyTimeline({
   allTimelineElements,
   emptyMessage = "Nothing scheduled for this date",
+  viewingDateStr,
 }: {
   allTimelineElements: TimelineElement[];
   emptyMessage?: string;
+  viewingDateStr?: string;
 }) {
-  // null on server â†’ HTML structure is identical on SSR and initial client render
+  // null on server → HTML structure is identical on SSR and initial client render
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isViewingToday, setIsViewingToday] = useState(true);
 
@@ -36,13 +38,20 @@ export default function DailyTimeline({
     const updateTime = () => {
       const now = new Date();
       setCurrentTime(now);
-      const searchParams = new URLSearchParams(window.location.search);
-      const urlDate = searchParams.get('date');
       const actualTodayStr = format(now, 'yyyy-MM-dd');
-      setIsViewingToday(!urlDate || urlDate === actualTodayStr);
+      
+      if (viewingDateStr) {
+        setIsViewingToday(viewingDateStr === actualTodayStr);
+      } else {
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlDate = searchParams.get('date');
+        setIsViewingToday(!urlDate || urlDate === actualTodayStr);
+      }
     };
     updateTime();
-    const interval = setInterval(updateTime, 5000);
+    
+    // Use 60 seconds since calculations are based on minutes
+    const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -178,7 +187,7 @@ export default function DailyTimeline({
                       </div>
 
                       {item.recommendedTask && (
-                        <div className="mt-2 flex items-start gap-2 px-3 py-2 rounded-lg bg-zinc-800/40 border border-zinc-700/40">
+                        <div className="mt-2 flex items-start gap-2 px-4 py-3 lg:px-3 lg:py-2 rounded-2xl lg:rounded-lg bg-zinc-800/40 border border-zinc-700/40">
                           <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 text-zinc-600 shrink-0" />
                           <div>
                             <p className="text-xs font-medium text-zinc-400">{item.recommendedTask.title}</p>
@@ -222,7 +231,7 @@ export default function DailyTimeline({
 
                   {/* Card */}
                   <div className={cn(
-                    "rounded-lg border-l-2 px-4 py-3 transition-all duration-200",
+                    "rounded-2xl lg:rounded-lg border-l-4 lg:border-l-[2px] px-5 py-4 lg:px-4 lg:py-3 transition-all duration-200",
                     isCurrent
                       ? cn("bg-zinc-800/70 border border-zinc-700/60", accentBorder, "shadow-sm")
                       : isFinished

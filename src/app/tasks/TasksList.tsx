@@ -219,8 +219,8 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-3 px-4 lg:px-0">
+        <div className="hidden lg:block">
           <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-1">Manage</p>
           <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">Tasks</h1>
         </div>
@@ -229,9 +229,9 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
           <DialogTrigger asChild>
             <Button
               size="sm"
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none"
+              className="w-full lg:w-auto h-12 lg:h-9 bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none rounded-xl lg:rounded-md text-base lg:text-sm font-medium"
             >
-              <Plus className="w-4 h-4 mr-1.5" />
+              <Plus className="w-5 h-5 lg:w-4 lg:h-4 mr-2 lg:mr-1.5" />
               New Task
             </Button>
           </DialogTrigger>
@@ -296,8 +296,8 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
                   </SelectContent>
                 </Select>
               </div>
-              <DialogFooter>
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">
+              <DialogFooter className="pt-2">
+                <Button type="submit" className="w-full h-12 lg:h-9 bg-indigo-600 hover:bg-indigo-700 text-white border-0 rounded-xl lg:rounded-md text-base lg:text-sm font-medium">
                   Save Task
                 </Button>
               </DialogFooter>
@@ -313,7 +313,7 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors duration-150 ${
+              className={`shrink-0 px-5 py-2 lg:px-3 lg:py-1 rounded-full text-sm lg:text-xs font-medium transition-colors duration-150 ${
                 filter === f
                   ? 'bg-zinc-700 text-zinc-100'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60'
@@ -328,7 +328,7 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
             <button
               key={p}
               onClick={() => setPriorityFilter(p)}
-              className={`shrink-0 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors duration-150 border ${
+              className={`shrink-0 px-4 py-1.5 lg:px-2.5 lg:py-0.5 rounded-full text-xs lg:text-[11px] font-medium transition-colors duration-150 border ${
                 priorityFilter === p
                   ? 'bg-zinc-700 text-zinc-200 border-zinc-600'
                   : 'text-zinc-600 border-zinc-800 hover:text-zinc-400 hover:border-zinc-700'
@@ -352,7 +352,7 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
           return (
             <div
               key={task.id}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border border-zinc-800/60 transition-all duration-150 ${
+              className={`flex items-center gap-4 lg:gap-3 px-4 py-4 lg:px-3 lg:py-2.5 rounded-2xl lg:rounded-lg border-l-4 lg:border-l-2 border border-zinc-800/60 transition-all duration-150 ${
                 task.completed
                   ? 'opacity-40 border-l-zinc-800'
                   : `bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-zinc-700/60 ${priorityBorder}`
@@ -366,7 +366,7 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
               </button>
 
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium leading-tight truncate ${task.completed ? 'line-through text-zinc-600' : 'text-zinc-100'}`}>
+                <p className={`text-base lg:text-sm font-medium leading-tight truncate ${task.completed ? 'line-through text-zinc-600' : 'text-zinc-100'}`}>
                   {task.title}
                 </p>
                 {(task.due_date || task.estimated_minutes) && (
@@ -385,11 +385,11 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
                 {!task.completed && task.priority === 'High' && (
                   <span className="text-[10px] font-semibold text-red-400 mr-1">High</span>
                 )}
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-700/50" onClick={() => openEditDialog(task)}>
-                  <Pencil className="w-3.5 h-3.5" />
+                <Button variant="ghost" size="icon" className="h-10 w-10 lg:h-7 lg:w-7 rounded-full lg:rounded-md text-zinc-500 lg:text-zinc-600 hover:text-zinc-200 hover:bg-zinc-700/50" onClick={() => openEditDialog(task)}>
+                  <Pencil className="w-5 h-5 lg:w-3.5 lg:h-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-600 hover:text-red-400 hover:bg-red-500/10" onClick={() => handleDelete(task.id, task.title)}>
-                  <Trash2 className="w-3.5 h-3.5" />
+                <Button variant="ghost" size="icon" className="h-10 w-10 lg:h-7 lg:w-7 rounded-full lg:rounded-md text-zinc-500 lg:text-zinc-600 hover:text-red-400 hover:bg-red-500/10" onClick={() => handleDelete(task.id, task.title)}>
+                  <Trash2 className="w-5 h-5 lg:w-3.5 lg:h-3.5" />
                 </Button>
               </div>
             </div>
@@ -434,11 +434,11 @@ export default function TasksList({ initialTasks }: { initialTasks: Task[] }) {
                   </SelectContent>
                 </Select>
               </div>
-              <DialogFooter className="flex-row justify-between">
-                <Button type="button" variant="destructive" onClick={() => handleDelete(editTaskData.id, editTaskData.title)}>
-                  <Trash2 className="w-4 h-4 mr-2" /> Delete
+              <DialogFooter className="flex-row justify-between pt-2">
+                <Button type="button" variant="destructive" className="h-12 lg:h-9 rounded-xl lg:rounded-md text-base lg:text-sm" onClick={() => handleDelete(editTaskData.id, editTaskData.title)}>
+                  <Trash2 className="w-5 h-5 lg:w-4 lg:h-4 mr-2" /> Delete
                 </Button>
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">Save Changes</Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white border-0 h-12 lg:h-9 rounded-xl lg:rounded-md text-base lg:text-sm">Save Changes</Button>
               </DialogFooter>
             </form>
           )}

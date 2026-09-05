@@ -108,63 +108,146 @@ export default function TodayClient({
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* â”€â”€ Header â”€â”€ */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        <div>
+    <div className="max-w-3xl mx-auto flex flex-col lg:block space-y-8 lg:space-y-6 pb-24 lg:pb-0">
+      
+      {/* 1. Header (Greeting + Date) */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 order-1 lg:order-none px-4 lg:px-0 mt-4 lg:mt-0">
+        <div className="space-y-1">
           {isActualToday ? (
             <>
-              <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
-                {formattedDate}
-              </p>
-              <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">
+              <h1 className="text-3xl font-bold text-zinc-50 tracking-tight leading-none">
                 {greeting}
               </h1>
+              <p className="text-sm font-medium text-zinc-400">
+                {formattedDate}
+              </p>
             </>
           ) : (
             <>
-              <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
-                Daily Planner
-              </p>
-              <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">
+              <h1 className="text-3xl font-bold text-zinc-50 tracking-tight leading-none">
                 {formattedDate}
               </h1>
+              <p className="text-sm font-medium text-zinc-400">
+                Daily Planner
+              </p>
             </>
           )}
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <QuickAddDialog defaultDate={targetDateStr} />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800"
-            onClick={() => navDate(-1)}
-          >
+        
+        {/* Navigation Buttons */}
+        <div className="flex items-center gap-1.5 shrink-0 bg-zinc-900/60 p-1 rounded-full border border-zinc-800/80">
+          <QuickAddDialog defaultDate={targetDateStr} trigger={
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-300 hover:text-zinc-100 bg-zinc-800/80">
+               <span className="text-lg leading-none mb-0.5">+</span>
+            </Button>
+          } />
+          <div className="w-px h-4 bg-zinc-800 mx-1" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-100" onClick={() => navDate(-1)}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
           {!isActualToday && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 text-xs"
-              onClick={() => router.push(`/?date=${actualTodayStr}`)}
-            >
+            <Button variant="ghost" size="sm" className="h-8 rounded-full text-zinc-400 hover:text-zinc-100 text-xs px-3" onClick={() => router.push(`/?date=${actualTodayStr}`)}>
               Today
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800"
-            onClick={() => navDate(1)}
-          >
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-100" onClick={() => navDate(1)}>
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* â”€â”€ Stats Pills â”€â”€ */}
-      <div className="flex flex-wrap gap-1.5">
+      {/* 2. Current/Next schedule item (MOBILE ONLY) */}
+      <div className="lg:hidden order-2 px-4 space-y-3">
+        <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Up Next</h2>
+        {briefing.nextScheduled ? (
+          <div className="relative overflow-hidden rounded-2xl bg-indigo-950/20 border border-indigo-500/20 p-4 shadow-sm">
+             <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
+             <div className="flex flex-col gap-1.5 pl-2">
+                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3 h-3" /> Upcoming
+                </span>
+                <span className="text-lg font-semibold text-zinc-100 leading-tight">
+                  {briefing.nextScheduled.title}
+                </span>
+                <span className="text-sm font-medium text-indigo-200/70">
+                  {briefing.nextScheduled.time}
+                </span>
+             </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-zinc-900/50 border border-zinc-800/80 p-4 text-center">
+             <p className="text-sm text-zinc-500">Nothing else scheduled</p>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Priority Tasks (MOBILE ONLY) */}
+      <div className="lg:hidden order-3 px-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Tasks</h2>
+          <Link href="/tasks" className="text-xs font-medium text-zinc-400 flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></Link>
+        </div>
+        {previewTasks.length === 0 && completedTargetTasks.length === 0 ? (
+          <div className="py-8 text-center border border-dashed border-zinc-800 rounded-2xl">
+            <CheckSquare className="w-6 h-6 text-zinc-700 mx-auto mb-2" />
+            <p className="text-sm text-zinc-600">No tasks for this date</p>
+            <QuickAddDialog
+              defaultDate={targetDateStr}
+              trigger={<Button variant="ghost" size="sm" className="mt-2 text-xs text-zinc-500">Add a task</Button>}
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {previewTasks.map((task) => (
+              <TaskRow key={task.id} task={task} onToggle={handleToggle} actualTodayStr={actualTodayStr} />
+            ))}
+            {completedTargetTasks.length > 0 && (
+              <div className="pt-2 mt-2 border-t border-zinc-800/60">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mb-2 px-1">
+                  Completed ({completedTargetTasks.length})
+                </p>
+                <div className="space-y-2">
+                  {completedTargetTasks.slice(0, 2).map((task) => (
+                    <TaskRow key={task.id} task={task} onToggle={handleToggle} actualTodayStr={actualTodayStr} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 4. Timeline (MOBILE ONLY) */}
+      <div className="lg:hidden order-4 px-4 space-y-3">
+        <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Timeline</h2>
+        <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-4">
+          <MiniTimeline elements={allTimelineElements} isViewingToday={isActualToday} hoursAhead={4} />
+        </div>
+      </div>
+
+      {/* 5. Daily Progress (MOBILE ONLY) */}
+      <div className="lg:hidden order-5 px-4 space-y-3 mt-4">
+        <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Daily Progress</h2>
+        <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-4 space-y-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-400 font-medium">Tasks Completed</span>
+            <span className="font-semibold text-zinc-200">{completedTasksCount} / {totalTasksForDay}</span>
+          </div>
+          {totalTasksForDay > 0 && (
+             <div className="w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
+                <div className="bg-indigo-500 h-1.5 rounded-full transition-all duration-700" style={{ width: `${progressPercentage}%` }} />
+             </div>
+          )}
+          <div className="flex flex-wrap gap-2 pt-1">
+            <StatPill icon={BookOpen} label={`${briefing.summary.classesCount} classes`} color="blue" />
+            <StatPill icon={Activity} label={`${briefing.summary.activitiesCount} activities`} color="purple" />
+          </div>
+        </div>
+      </div>
+
+      {/* DESKTOP CONTENT */}
+
+      <div className="hidden lg:flex flex-wrap gap-1.5">
         <StatPill icon={BookOpen} label={`${briefing.summary.classesCount} classes`} color="blue" />
         <StatPill icon={CheckSquare} label={`${briefing.summary.tasksCount} tasks`} color="amber" />
         <StatPill icon={Activity} label={`${briefing.summary.activitiesCount} activities`} color="purple" />
@@ -177,14 +260,13 @@ export default function TodayClient({
         )}
       </div>
 
-      {/* â”€â”€ Focus Card + Mini Timeline â”€â”€ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Focus Card */}
         <div className="lg:col-span-3 rounded-xl border border-zinc-800 bg-zinc-900 p-5 space-y-4">
           {/* Header row */}
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
-              Today&apos;s Focus
+              Today's Focus
             </span>
             {totalTasksForDay > 0 && (
               <span className="text-xs text-zinc-500">
@@ -210,13 +292,13 @@ export default function TodayClient({
                   ) : (
                     <span>Due today</span>
                   )}
-                  <span className="text-zinc-700">Â·</span>
+                  <span className="text-zinc-700">·</span>
                   <span>{topPriorityTask.priority} priority</span>
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-zinc-500">All caught up â€” nice work!</p>
+            <p className="text-sm text-zinc-500">All caught up — nice work!</p>
           )}
 
           {/* Progress bar */}
@@ -289,8 +371,8 @@ export default function TodayClient({
         </div>
       </div>
 
-      {/* â”€â”€ Tasks Preview â”€â”€ */}
-      <div className="space-y-2">
+      {/* Tasks Preview Desktop */}
+      <div className="hidden lg:block space-y-2">
         <div className="flex items-center justify-between pb-1">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
             Tasks
@@ -387,44 +469,53 @@ function TaskRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg border transition-all duration-150",
+        "flex items-center gap-3.5 lg:gap-3 px-4 lg:px-3 py-3 lg:py-2 rounded-2xl lg:rounded-lg border transition-all duration-200",
         isCompleted
-          ? "border-transparent opacity-40"
-          : "border-zinc-800/60 bg-zinc-900/40 hover:border-zinc-700/60 hover:bg-zinc-800/40"
+          ? "border-transparent bg-zinc-900/20 lg:bg-transparent opacity-50"
+          : "border-zinc-800/60 bg-zinc-900/60 lg:bg-zinc-900/40 hover:border-zinc-700/60 hover:bg-zinc-800/40 active:scale-[0.98] lg:active:scale-100 shadow-sm lg:shadow-none"
       )}
     >
       <button
         onClick={() => onToggle(task.id, task.completed)}
         className={cn(
-          "shrink-0 transition-colors duration-150",
+          "shrink-0 transition-colors duration-200 p-0.5",
           isCompleted
-            ? "text-green-500"
-            : "text-zinc-700 hover:text-green-400"
+            ? "text-indigo-500 lg:text-green-500"
+            : "text-zinc-600 lg:text-zinc-700 hover:text-indigo-400 lg:hover:text-green-400"
         )}
       >
         {isCompleted ? (
-          <CheckCircle2 className="w-4 h-4" />
+          <CheckCircle2 className="w-5 h-5 lg:w-4 lg:h-4" />
         ) : (
-          <Circle className="w-4 h-4" />
+          <Circle className="w-5 h-5 lg:w-4 lg:h-4" />
         )}
       </button>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 flex flex-col justify-center">
         <p
           className={cn(
-            "text-sm leading-tight truncate",
-            isCompleted ? "line-through text-zinc-600" : "text-zinc-200"
+            "text-[15px] lg:text-sm leading-tight truncate font-medium lg:font-normal",
+            isCompleted ? "line-through text-zinc-500 lg:text-zinc-600" : "text-zinc-100 lg:text-zinc-200"
           )}
         >
           {task.title}
         </p>
+        {/* On mobile, show priority or duration if not completed */}
+        {!isCompleted && (task.priority === "High" || task.estimated_minutes || isOverdue) && (
+          <div className="flex lg:hidden items-center gap-2 text-xs mt-1">
+             {isOverdue && <span className="font-semibold text-red-400">Overdue</span>}
+             {!isOverdue && task.priority === "High" && <span className="font-semibold text-amber-400">High Priority</span>}
+             {task.estimated_minutes && <span className="text-zinc-500">{task.estimated_minutes} min</span>}
+          </div>
+        )}
       </div>
+      {/* Desktop indicators */}
       {!isCompleted && isOverdue && (
-        <span className="text-[10px] font-semibold text-red-400 shrink-0">
+        <span className="hidden lg:inline text-[10px] font-semibold text-red-400 shrink-0">
           Overdue
         </span>
       )}
       {!isCompleted && task.priority === "High" && !isOverdue && (
-        <span className="text-[10px] font-semibold text-amber-400 shrink-0">
+        <span className="hidden lg:inline text-[10px] font-semibold text-amber-400 shrink-0">
           High
         </span>
       )}

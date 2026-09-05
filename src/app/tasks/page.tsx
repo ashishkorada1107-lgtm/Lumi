@@ -1,18 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
-import TasksList from "./TasksList";
+import TasksView from "./TasksView";
 
 export default async function TasksPage() {
   const supabase = await createClient();
-  const { data: tasks, error } = await supabase.from("tasks").select("*").order("due_date", { ascending: true });
+  
+  const [
+    { data: tasks, error: tasksError },
+    { data: activities, error: activitiesError }
+  ] = await Promise.all([
+    supabase.from("tasks").select("*").order("due_date", { ascending: true }),
+    supabase.from("activities").select("*").order("date", { ascending: true })
+  ]);
 
-  if (error) {
-    console.error("Error fetching tasks:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
-  }
+  if (tasksError) console.error("Error fetching tasks:", tasksError);
+  if (activitiesError) console.error("Error fetching activities:", activitiesError);
 
-  return <TasksList initialTasks={tasks || []} />;
+  return <TasksView initialTasks={tasks || []} initialActivities={activities || []} />;
 }
