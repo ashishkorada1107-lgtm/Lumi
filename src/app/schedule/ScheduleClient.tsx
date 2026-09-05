@@ -240,6 +240,7 @@ export default function ScheduleClient({
 
     await addClass(formData);
     setIsAddOpen(false);
+    router.refresh();
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -281,6 +282,7 @@ export default function ScheduleClient({
       setEditClassData(null);
       try {
         await editClass(id, formData);
+        router.refresh();
       } catch (err) {
         console.error(err);
       }
@@ -292,12 +294,14 @@ export default function ScheduleClient({
     if (window.confirm(`Are you sure you want to delete ${editClassData.title}?`)) {
       const id = editClassData.id;
       startTransition(async () => {
-        setOptimisticClasses({ type: "delete", payload: id });
-        setEditClassData(null);
         try {
           await deleteClass(id);
+          setOptimisticClasses({ type: "delete", payload: id });
+          setEditClassData(null);
+          router.refresh();
         } catch (err) {
           console.error(err);
+          setEditError(err instanceof Error ? err.message : "Failed to delete class");
         }
       });
     }

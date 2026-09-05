@@ -18,6 +18,8 @@ type ReminderTask = {
 type ReminderCache = {
   classes: ReminderClass[];
   tasks: ReminderTask[];
+  briefingEnabled: boolean;
+  briefingTime: string;
   scheduledIds: number[];
 };
 
@@ -43,7 +45,7 @@ function readCache(userId: string): ReminderCache {
     console.error("Failed to read local reminder cache", error);
   }
 
-  return { classes: [], tasks: [], scheduledIds: [] };
+  return { classes: [], tasks: [], briefingEnabled: false, briefingTime: "07:00", scheduledIds: [] };
 }
 
 function writeCache(userId: string, cache: ReminderCache) {
@@ -119,6 +121,23 @@ function createNotifications(cache: ReminderCache) {
     });
   }
 
+  if (cache.briefingEnabled) {
+    for (let offset = 0; offset < DAYS_TO_SCHEDULE; offset += 1) {
+      const date = new Date(now);
+      date.setDate(now.getDate() + offset);
+      const briefingAt = parseTime(cache.briefingTime, date);
+      if (!briefingAt || briefingAt <= now) continue;
+
+      notifications.push({
+        id: stableId(`briefing:${date.toISOString().slice(0, 10)}`),
+        title: "DailyFlow morning briefing",
+        body: "Your DailyFlow briefing is ready.",
+        schedule: { at: briefingAt },
+        extra: { kind: "briefing", sourceId: 0 },
+      });
+    }
+  }
+
   return notifications;
 }
 
@@ -175,6 +194,8 @@ export function syncLocalReminders(
   data: {
     classes?: ReminderClass[];
     tasks?: ReminderTask[];
+    briefingEnabled?: boolean;
+    briefingTime?: string;
     replaceClasses?: boolean;
     replaceTasks?: boolean;
   }
@@ -192,6 +213,8 @@ export function syncLocalReminders(
       ? (data.replaceTasks ? data.tasks : [...current.tasks, ...data.tasks])
           .filter((item, index, items) => items.findIndex((candidate) => candidate.id === item.id) === index)
       : current.tasks,
+    briefingEnabled: data.briefingEnabled ?? current.briefingEnabled,
+    briefingTime: data.briefingTime ?? current.briefingTime,
   };
 
   writeCache(userId, next);

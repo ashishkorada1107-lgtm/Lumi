@@ -141,13 +141,15 @@ export async function deleteClass(id: number) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Unauthorized")
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from("classes")
     .delete()
     .eq("id", id)
     .eq("user_id", user.id)
+    .select("id")
 
   if (error) throw new Error(`Failed to delete class: ${error.message}`)
+  if (!deleted?.length) throw new Error("Class was not found or could not be deleted")
 
   revalidatePath("/schedule")
   revalidatePath("/")

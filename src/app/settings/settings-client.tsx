@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { savePushSubscription, removePushSubscription, sendTestNotification, saveProfile } from "./actions";
 import { logout } from "../login/actions";
+import { Capacitor } from "@capacitor/core";
+import LocalNotificationSync from "@/components/LocalNotificationSync";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - base64String.length % 4) % 4);
@@ -20,7 +22,7 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-export default function SettingsClient({ userEmail, initialName, vapidPublicKey }: { userEmail: string, initialName: string, vapidPublicKey: string }) {
+export default function SettingsClient({ userId, userEmail, initialName, vapidPublicKey }: { userId: string, userEmail: string, initialName: string, vapidPublicKey: string }) {
   const [displayName, setDisplayName] = useState(initialName);
   const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [briefingEnabled, setBriefingEnabled] = useState(false);
@@ -30,6 +32,7 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
   const [subStatus, setSubStatus] = useState<string>("Checking...");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSupported, setIsSupported] = useState(true);
+  const isNativeAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
 
   const getDeviceId = () => {
     let id = localStorage.getItem("lumi_device_id");
@@ -44,6 +47,12 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
   useEffect(() => {
     const savedTime = localStorage.getItem("lumi_briefing_time") || "07:00";
     setBriefingTime(savedTime);
+
+    if (isNativeAndroid) {
+      setBriefingEnabled(localStorage.getItem("dailyflow_local_briefing_enabled") === "true");
+      setSubStatus("Android notifications");
+      return;
+    }
     
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     setTimezone(tz);
@@ -101,12 +110,14 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
     };
     
     checkState();
-  }, []);
+  }, [isNativeAndroid]);
 
   const handleTimeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setBriefingTime(val);
     localStorage.setItem("lumi_briefing_time", val);
+
+    if (isNativeAndroid) return;
     
     // Sync with DB if currently enabled
     if (briefingEnabled) {
@@ -146,6 +157,12 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
 
   const handleToggle = async (checked: boolean) => {
     setErrorMsg(null);
+    if (isNativeAndroid) {
+      localStorage.setItem("dailyflow_local_briefing_enabled", String(checked));
+      setBriefingEnabled(checked);
+      setSubStatus(checked ? "Android briefing scheduled" : "Android briefing disabled");
+      return;
+    }
     if (!isSupported) {
       setErrorMsg("Push notifications are not supported in this browser.");
       return;
@@ -226,6 +243,8 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
   };
 
   return (
+    <>
+    <LocalNotificationSync userId={userId} briefingEnabled={isNativeAndroid && briefingEnabled} briefingTime={briefingTime} />
     <div className="max-w-3xl mx-auto space-y-8 md:space-y-6">
       <div className="px-1 md:px-0">
         <p className="text-[11px] md:text-xs font-semibold md:font-medium text-zinc-500 uppercase tracking-[0.18em] md:tracking-widest mb-2 md:mb-1">Preferences</p>
@@ -357,5 +376,6 @@ export default function SettingsClient({ userEmail, initialName, vapidPublicKey 
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

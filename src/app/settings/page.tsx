@@ -14,6 +14,5 @@ export default async function SettingsPage() {
 
   const getEnv = (k: string) => process.env[k];
   const vapidPublicKey = getEnv('NEXT_PUBLIC_VAPID_PUBLIC_KEY') || '';
-  return <SettingsClient userEmail={user.email || ''} initialName={profile?.display_name || ''} vapidPublicKey={vapidPublicKey} />;
+  return <SettingsClient userId={user.id} userEmail={user.email || ''} initialName={profile?.display_name || ''} vapidPublicKey={vapidPublicKey} />;
 }
-

@@ -17,6 +17,8 @@ type Props = {
     due_date: string | null;
     completed: boolean;
   }>;
+  briefingEnabled?: boolean;
+  briefingTime?: string;
   replaceClasses?: boolean;
   replaceTasks?: boolean;
 };
@@ -25,19 +27,21 @@ export default function LocalNotificationSync({
   userId,
   classes,
   tasks,
+  briefingEnabled,
+  briefingTime,
   replaceClasses,
   replaceTasks,
 }: Props) {
   useEffect(() => {
-    syncLocalReminders(userId, { classes, tasks, replaceClasses, replaceTasks });
+    syncLocalReminders(userId, { classes, tasks, briefingEnabled, briefingTime, replaceClasses, replaceTasks });
 
     const handleOnline = () => {
-      syncLocalReminders(userId, { classes, tasks, replaceClasses, replaceTasks });
+      syncLocalReminders(userId, { classes, tasks, briefingEnabled, briefingTime, replaceClasses, replaceTasks });
     };
 
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
-  }, [userId, classes, tasks, replaceClasses, replaceTasks]);
+  }, [userId, classes, tasks, briefingEnabled, briefingTime, replaceClasses, replaceTasks]);
 
   return null;
 }
