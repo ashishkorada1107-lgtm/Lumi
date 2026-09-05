@@ -26,11 +26,44 @@ type ReminderCache = {
 const CACHE_PREFIX = "dailyflow:local-reminders:";
 const REMINDER_MINUTES_BEFORE_CLASS = 10;
 const DAYS_TO_SCHEDULE = 14;
+const CHANNEL_ID = "dailyflow-reminders";
 
 let reconcileQueue = Promise.resolve();
 
 function isAndroidNative() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
+}
+
+export async function scheduleLocalTestNotification() {
+  if (!isAndroidNative()) return;
+
+  await LocalNotifications.createChannel({
+    id: CHANNEL_ID,
+    name: "DailyFlow reminders",
+    description: "Class, task, and briefing reminders",
+    importance: 4,
+  });
+
+  const permissions = await LocalNotifications.checkPermissions();
+  if (permissions.display !== "granted") {
+    const requested = await LocalNotifications.requestPermissions();
+    if (requested.display !== "granted") {
+      throw new Error("Android notification permission is not granted");
+    }
+  }
+
+  await LocalNotifications.schedule({
+    notifications: [{
+      id: 2147483001,
+      title: "DailyFlow test notification",
+      body: "Android local notifications are working.",
+      schedule: {
+        at: new Date(Date.now() + 60_000),
+        allowWhileIdle: true,
+      },
+      channelId: CHANNEL_ID,
+    }],
+  });
 }
 
 function cacheKey(userId: string) {
@@ -81,6 +114,7 @@ function createNotifications(cache: ReminderCache) {
     title: string;
     body: string;
     schedule: { at: Date };
+    channelId: string;
     extra: { kind: string; sourceId: number };
   }> = [];
 
@@ -101,6 +135,7 @@ function createNotifications(cache: ReminderCache) {
         title: "Upcoming class",
         body: `${classItem.title} starts in ${REMINDER_MINUTES_BEFORE_CLASS} minutes`,
         schedule: { at: reminderAt },
+        channelId: CHANNEL_ID,
         extra: { kind: "class", sourceId: classItem.id },
       });
     }
@@ -117,6 +152,7 @@ function createNotifications(cache: ReminderCache) {
       title: "Task due today",
       body: task.title,
       schedule: { at: reminderAt },
+      channelId: CHANNEL_ID,
       extra: { kind: "task", sourceId: task.id },
     });
   }
@@ -133,6 +169,7 @@ function createNotifications(cache: ReminderCache) {
         title: "DailyFlow morning briefing",
         body: "Your DailyFlow briefing is ready.",
         schedule: { at: briefingAt },
+        channelId: CHANNEL_ID,
         extra: { kind: "briefing", sourceId: 0 },
       });
     }
@@ -164,6 +201,12 @@ async function reconcile(userId: string) {
   }
 
   const cache = readCache(userId);
+  await LocalNotifications.createChannel({
+    id: CHANNEL_ID,
+    name: "DailyFlow reminders",
+    description: "Class, task, and briefing reminders",
+    importance: 4,
+  });
   const permissions = await LocalNotifications.checkPermissions();
   if (permissions.display === "prompt") {
     const requested = await LocalNotifications.requestPermissions();

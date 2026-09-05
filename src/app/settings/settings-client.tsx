@@ -10,6 +10,7 @@ import { savePushSubscription, removePushSubscription, sendTestNotification, sav
 import { logout } from "../login/actions";
 import { Capacitor } from "@capacitor/core";
 import LocalNotificationSync from "@/components/LocalNotificationSync";
+import { scheduleLocalTestNotification } from "@/lib/local-notifications";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - base64String.length % 4) % 4);
@@ -233,7 +234,12 @@ export default function SettingsClient({ userId, userEmail, initialName, vapidPu
   const handleTest = async () => {
     setErrorMsg(null);
     if (isNativeAndroid) {
-      setSubStatus("Android briefing scheduled");
+      try {
+        await scheduleLocalTestNotification();
+        setSubStatus("Android test notification scheduled");
+      } catch (err) {
+        setErrorMsg(err instanceof Error ? err.message : "Failed to schedule Android notification");
+      }
       return;
     }
     try {
