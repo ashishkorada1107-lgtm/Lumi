@@ -238,7 +238,8 @@ export default function ScheduleClient({
     formData.append("room", addRoom);
     formData.append("faculty", addFaculty);
 
-    await addClass(formData);
+    const createdClass = await addClass(formData);
+    setOptimisticClasses({ type: "add", payload: createdClass });
     setIsAddOpen(false);
     router.refresh();
   };
@@ -455,7 +456,7 @@ export default function ScheduleClient({
 
   return (
     <>
-    <LocalNotificationSync userId={userId} classes={initialClasses} tasks={tasks} replaceClasses />
+    <LocalNotificationSync userId={userId} classes={optimisticClasses} tasks={tasks} replaceClasses />
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-3 mb-2 lg:mb-0 px-2 lg:px-0">
         <div>

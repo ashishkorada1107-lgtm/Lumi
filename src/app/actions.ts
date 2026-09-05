@@ -102,7 +102,7 @@ export async function addClass(formData: FormData) {
   if (!user) throw new Error("Unauthorized")
 
   console.time("addClass_supabaseInsert")
-  const { error } = await supabase.from("classes").insert({
+  const { data: created, error } = await supabase.from("classes").insert({
     user_id: user.id,
     title: formData.get("title") as string,
     day_of_week: formData.get("day_of_week") as string,
@@ -110,16 +110,18 @@ export async function addClass(formData: FormData) {
     end_time: formData.get("end_time") as string,
     room: formData.get("room") as string,
     faculty: formData.get("faculty") as string,
-  })
+  }).select().single()
   console.timeEnd("addClass_supabaseInsert")
   if (error) {
     console.error("ADD CLASS ERROR:", error)
+    throw new Error(`Failed to add class: ${error.message}`)
   }
   console.time("addClass_revalidate")
   revalidatePath("/schedule")
   revalidatePath("/")
   console.timeEnd("addClass_revalidate")
   console.log(`[ACTION] addClass finished in ${Date.now() - start}ms`)
+  return created
 }
 
 export async function editClass(id: number, formData: FormData) {
