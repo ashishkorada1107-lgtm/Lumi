@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navigation } from "@/components/Navigation";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { GlobalSwipe } from "@/components/GlobalSwipe";
+import { OfflineStatus } from "@/components/OfflineStatus";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -31,13 +32,14 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={geist.className}>
         <ServiceWorkerRegister />
+        <OfflineStatus />
         <div className="flex h-screen flex-col md:flex-row md:overflow-hidden bg-zinc-950">
           <div className="w-full flex-none md:w-56">
             <Navigation />
           </div>
           <GlobalSwipe>
             <div className="flex-grow md:p-7 overflow-y-auto overflow-x-hidden w-full h-full pb-24 md:pb-7">
-              <div className="p-4 md:p-0 min-h-full">
+              <div className="p-4 pt-16 md:p-0 min-h-full">
                 {children}
               </div>
             </div>

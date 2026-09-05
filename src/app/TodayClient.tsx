@@ -26,6 +26,7 @@ import MiniTimeline from "@/components/MiniTimeline";
 import QuickAddDialog from "@/components/QuickAddDialog";
 import { BriefingData } from "@/lib/briefing";
 import { cn } from "@/lib/utils";
+import LocalNotificationSync from "@/components/LocalNotificationSync";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 
@@ -37,6 +38,7 @@ export default function TodayClient({
   actualTodayStr,
   briefing,
   userName,
+  userId,
   serverHour,
 }: {
   classes: Database["public"]["Tables"]["classes"]["Row"][];
@@ -46,6 +48,7 @@ export default function TodayClient({
   actualTodayStr: string;
   briefing: BriefingData;
   userName?: string;
+  userId?: string;
   serverHour: number;
 }) {
   const router = useRouter();
@@ -108,6 +111,8 @@ export default function TodayClient({
   };
 
   return (
+    <>
+    <LocalNotificationSync userId={userId} classes={classes} tasks={tasks} />
     <div className="max-w-3xl mx-auto flex flex-col lg:block space-y-8 lg:space-y-6 pb-24 lg:pb-0">
       
       {/* 1. Header (Greeting + Date) */}
@@ -421,6 +426,7 @@ export default function TodayClient({
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -522,4 +528,3 @@ function TaskRow({
     </div>
   );
 }
-

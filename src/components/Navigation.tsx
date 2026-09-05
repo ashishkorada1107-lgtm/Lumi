@@ -16,6 +16,10 @@ const navLinks = [
 export function Navigation() {
   const pathname = usePathname();
 
+  if (pathname === "/login" || pathname === "/signup") {
+    return null;
+  }
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -49,6 +53,11 @@ export function Navigation() {
       </div>
 
       {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex h-12 items-center justify-center border-b border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl">
+        <Link href="/" className="text-sm font-semibold tracking-[0.12em] text-zinc-100 select-none">
+          dailyflow
+        </Link>
+      </div>
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-800/60 pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around items-center h-14 px-1">
           {navLinks.map((link) => {
@@ -75,4 +84,3 @@ export function Navigation() {
     </>
   );
 }
-

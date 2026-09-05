@@ -55,6 +55,7 @@ export default async function TodayPage(props: { searchParams: Promise<{ date?: 
       actualTodayStr={actualTodayStr}
       briefing={briefing}
       userName={profile?.display_name || undefined}
+      userId={user?.id}
       serverHour={actualTodayObj.getHours()}
     />
   );

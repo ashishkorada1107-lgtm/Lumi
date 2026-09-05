@@ -6,6 +6,7 @@ import ActivitiesClient from "../activities/ActivitiesClient";
 import { Database } from "@/types/database.types";
 import { cn } from "@/lib/utils";
 import { Activity, CheckSquare } from "lucide-react";
+import LocalNotificationSync from "@/components/LocalNotificationSync";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 type ActivityType = Database["public"]["Tables"]["activities"]["Row"];
@@ -13,13 +14,17 @@ type ActivityType = Database["public"]["Tables"]["activities"]["Row"];
 export default function TasksView({
   initialTasks,
   initialActivities,
+  userId,
 }: {
   initialTasks: Task[];
   initialActivities: ActivityType[];
+  userId?: string;
 }) {
   const [activeTab, setActiveTab] = useState<"tasks" | "activities">("tasks");
 
   return (
+    <>
+      <LocalNotificationSync userId={userId} tasks={initialTasks} replaceTasks />
     <div className="w-full space-y-6">
       {/* Header & Toggle */}
       <div className="max-w-3xl mx-auto px-4 lg:px-0 flex flex-col lg:block gap-4 sm:gap-3 mb-2 lg:mb-6 mt-4 lg:mt-0">
@@ -61,5 +66,6 @@ export default function TasksView({
         )}
       </div>
     </div>
+    </>
   );
 }

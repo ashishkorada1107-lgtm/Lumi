@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Calendar, CheckSquare,
 import { generateTimeline } from "@/lib/timeline";
 import DailyTimeline from "@/components/DailyTimeline";
 import { cn } from "@/lib/utils";
+import LocalNotificationSync from "@/components/LocalNotificationSync";
 
 type ClassEvent = Database["public"]["Tables"]["classes"]["Row"];
 type ActivityEvent = Database["public"]["Tables"]["activities"]["Row"];
@@ -131,6 +132,7 @@ export default function ScheduleClient({
   actualTodayStr,
   weekStartStr,
   weekEndStr,
+  userId,
 }: { 
   initialClasses: ClassEvent[],
   dailyClasses: ClassEvent[],
@@ -140,6 +142,7 @@ export default function ScheduleClient({
   actualTodayStr: string,
   weekStartStr: string,
   weekEndStr: string,
+  userId?: string,
 }) {
   const router = useRouter();
   
@@ -447,6 +450,8 @@ export default function ScheduleClient({
   }, [tasksForWeek]);
 
   return (
+    <>
+    <LocalNotificationSync userId={userId} classes={initialClasses} tasks={tasks} replaceClasses />
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-3 mb-2 lg:mb-0 px-2 lg:px-0">
         <div>
@@ -798,5 +803,6 @@ export default function ScheduleClient({
         )}
       </div>
     </div>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import ScheduleClient from "./ScheduleClient";
 export default async function SchedulePage(props: { searchParams: Promise<{ date?: string }> }) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   
   const actualTodayObj = toZonedTime(new Date(), "Asia/Kolkata");
   const targetDateStr = searchParams.date || format(actualTodayObj, "yyyy-MM-dd");
@@ -47,6 +48,7 @@ export default async function SchedulePage(props: { searchParams: Promise<{ date
       dailyClasses={dailyClasses || []}
       activities={activities || []}
       tasks={tasks || []}
+      userId={user?.id}
       targetDateStr={targetDateStr}
       actualTodayStr={actualTodayStr}
       weekStartStr={weekStartStr}

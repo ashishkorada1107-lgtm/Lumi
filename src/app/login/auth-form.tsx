@@ -17,7 +17,7 @@ export default function AuthForm({ error, message }: { error?: string, message?:
     <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
       <div className="flex items-center gap-2 mb-8 text-primary">
         <Sun className="h-8 w-8" />
-        <span className="text-2xl font-bold">DailyFlow</span>
+        <span className="text-2xl font-semibold tracking-[0.12em]">dailyflow</span>
       </div>
       
       <Card className="w-full max-w-sm">
@@ -99,4 +99,3 @@ export default function AuthForm({ error, message }: { error?: string, message?:
     </div>
   );
 }
-

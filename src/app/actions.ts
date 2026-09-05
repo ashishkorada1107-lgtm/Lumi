@@ -138,7 +138,17 @@ export async function editClass(id: number, formData: FormData) {
 
 export async function deleteClass(id: number) {
   const supabase = await createClient()
-  await supabase.from("classes").delete().eq("id", id)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Unauthorized")
+
+  const { error } = await supabase
+    .from("classes")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+
+  if (error) throw new Error(`Failed to delete class: ${error.message}`)
+
   revalidatePath("/schedule")
   revalidatePath("/")
 }
@@ -195,4 +205,3 @@ export async function deleteActivity(id: number) {
   revalidatePath("/schedule")
   revalidatePath("/")
 }
-
