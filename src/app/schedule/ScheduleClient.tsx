@@ -504,7 +504,15 @@ export default function ScheduleClient({
               </div>
             </div>
 
-            <DailyTimeline allTimelineElements={allTimelineElements} emptyMessage="Nothing scheduled for this date." />
+            <DailyTimeline
+              allTimelineElements={allTimelineElements}
+              emptyMessage="Nothing scheduled for this date."
+              onClassClick={(item) => {
+                const classId = Number(item.original.id);
+                const classItem = optimisticClasses.find((candidate) => candidate.id === classId);
+                if (classItem) setEditClassData(classItem);
+              }}
+            />
           </div>
         )}
 

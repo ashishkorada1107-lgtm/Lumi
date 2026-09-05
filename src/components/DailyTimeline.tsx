@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { CheckCircle2, MapPin } from "lucide-react";
-import { TimelineElement } from "@/lib/timeline";
+import { ScheduledTimelineItem, TimelineElement } from "@/lib/timeline";
 import { cn } from "@/lib/utils";
 
 function timeToMinutes(timeStr: string) {
@@ -25,10 +25,12 @@ export default function DailyTimeline({
   allTimelineElements,
   emptyMessage = "Nothing scheduled for this date",
   viewingDateStr,
+  onClassClick,
 }: {
   allTimelineElements: TimelineElement[];
   emptyMessage?: string;
   viewingDateStr?: string;
+  onClassClick?: (item: ScheduledTimelineItem) => void;
 }) {
   // null on server → HTML structure is identical on SSR and initial client render
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
@@ -230,14 +232,20 @@ export default function DailyTimeline({
                   </div>
 
                   {/* Card */}
-                  <div className={cn(
-                    "rounded-2xl lg:rounded-lg border-l-4 lg:border-l-[2px] px-5 py-4 lg:px-4 lg:py-3 transition-all duration-200",
+                  <div
+                    onClick={isClass && onClassClick ? () => onClassClick(item) : undefined}
+                    role={isClass && onClassClick ? "button" : undefined}
+                    tabIndex={isClass && onClassClick ? 0 : undefined}
+                    className={cn(
+                      "rounded-2xl lg:rounded-lg border-l-4 lg:border-l-[2px] px-5 py-4 lg:px-4 lg:py-3 transition-all duration-200",
                     isCurrent
                       ? cn("bg-zinc-800/70 border border-zinc-700/60", accentBorder, "shadow-sm")
                       : isFinished
                         ? "bg-zinc-900/30 border border-transparent border-l-zinc-800 opacity-40"
-                        : "bg-zinc-900/60 border border-zinc-800/60 border-l-zinc-700 hover:bg-zinc-800/50"
-                  )}>
+                        : "bg-zinc-900/60 border border-zinc-800/60 border-l-zinc-700 hover:bg-zinc-800/50",
+                      isClass && onClassClick && "cursor-pointer active:scale-[0.99]"
+                    )}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <p className={cn(
                         "font-medium text-sm leading-snug",
@@ -305,4 +313,3 @@ export default function DailyTimeline({
     </div>
   );
 }
-

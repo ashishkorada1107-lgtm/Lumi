@@ -232,6 +232,10 @@ export default function SettingsClient({ userId, userEmail, initialName, vapidPu
 
   const handleTest = async () => {
     setErrorMsg(null);
+    if (isNativeAndroid) {
+      setSubStatus("Android briefing scheduled");
+      return;
+    }
     try {
       const res = await sendTestNotification(getDeviceId());
       if (res?.error) {
