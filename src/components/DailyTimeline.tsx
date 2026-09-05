@@ -238,6 +238,10 @@ export default function DailyTimeline({
                       event.stopPropagation();
                       onClassClick(item);
                     } : undefined}
+                    onPointerUp={isClass && onClassClick ? (event) => {
+                      event.stopPropagation();
+                      onClassClick(item);
+                    } : undefined}
                     role={isClass && onClassClick ? "button" : undefined}
                     tabIndex={isClass && onClassClick ? 0 : undefined}
                     className={cn(
