@@ -508,7 +508,7 @@ export default function ScheduleClient({
               allTimelineElements={allTimelineElements}
               emptyMessage="Nothing scheduled for this date."
               onClassClick={(item) => {
-                const classId = Number(item.original.id);
+                const classId = Number(item.id.replace("cls-", ""));
                 const classItem = optimisticClasses.find((candidate) => candidate.id === classId);
                 if (classItem) setEditClassData(classItem);
               }}
